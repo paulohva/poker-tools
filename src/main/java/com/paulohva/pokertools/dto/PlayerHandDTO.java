@@ -2,15 +2,13 @@ package com.paulohva.pokertools.dto;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class PlayerHandDTO implements Serializable {
 
     private String playerName;
-    private List<CardDTO> cards;
+    private CardDTO[] cards;
 
-    public PlayerHandDTO(String playerName, List<CardDTO> cards) {
+    public PlayerHandDTO(String playerName, CardDTO[] cards) {
         this.playerName = playerName;
         this.cards = cards;
     }
@@ -26,27 +24,26 @@ public class PlayerHandDTO implements Serializable {
         this.playerName = playerName;
     }
 
-    public List<CardDTO> getCards() {
+    public CardDTO[] getCards() {
         return cards;
     }
 
-    public void setCards(List<CardDTO> cards) {
+    public void setCards(CardDTO[] cards) {
         this.cards = cards;
     }
 
     //todo checa o estado atual
     public boolean isValuesConsecutive() {
-        Integer[] cardRankArray = cards.stream().map(i -> i.getRank()).toArray(Integer[]::new);
-
-        for(int index = 0; index < cardRankArray.length; index++) {
-            if(index == cardRankArray.length - 1) {
+        for(int index = 0; index < cards.length; index++) {
+            if(index == cards.length - 1) {
                 continue;
             }
-            if(cardRankArray[index + 1] - cardRankArray[index] != 1) {
+            if(cards[index + 1].getRank() - cards[index].getRank() != 1) {
                 return false;
             }
         }
-
         return true;
     }
+
+    public List<CardDTO> getCardsOrdened
 }

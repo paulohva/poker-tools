@@ -3,16 +3,16 @@ package com.paulohva.pokertools.dto;
 import java.io.Serializable;
 import java.util.List;
 
-public class HandResultDTO implements Serializable {
+public class EvaluateHandResultDTO implements Serializable {
     private String winnerPlayer;
     private int handRank;
 
-    public HandResultDTO(String winnerPlayer, int handRank) {
+    public EvaluateHandResultDTO(String winnerPlayer, int handRank) {
         this.winnerPlayer = winnerPlayer;
         this.handRank = handRank;
     }
 
-    public HandResultDTO() {
+    public EvaluateHandResultDTO() {
     }
 
     public int getHandRank() {
