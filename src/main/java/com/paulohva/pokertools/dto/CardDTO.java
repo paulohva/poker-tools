@@ -1,13 +1,17 @@
 package com.paulohva.pokertools.dto;
 
 import com.paulohva.pokertools.utils.StandardDeckUtils;
+import org.jboss.jandex.Index;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class CardDTO implements Serializable {
     private String value;
-    private char kind;
+    private Character kind;
 
     public CardDTO() {
     }
@@ -25,20 +29,60 @@ public class CardDTO implements Serializable {
         this.value = value;
     }
 
-    public char getKind() {
+    public Character getKind() {
         return kind;
     }
 
-    public void setKind(char kind) {
+    public void setKind(Character kind) {
         this.kind = kind;
     }
 
     public int getRank() {
-        if(this.value == null ) {
-            //todo verify this
+        List<Integer> rankList = new ArrayList<>();
 
+        if (this.value == null) {
+            //todo verify this
             return 0;
         }
-        return StandardDeckUtils.getCardRankByValue(this.value);
+        //todo exception handler
+        try {
+            rankList = StandardDeckUtils.CARD_VALUE_TO_RANK.entrySet()
+                    .stream()
+                    .filter(i -> i.getKey().equals(value))
+                    .map(m -> m.getValue()).collect(Collectors.toList());
+        } catch (IndexOutOfBoundsException e) {
+            return 0;
+        }
+
+        if (rankList.size() != 1) {
+            //TODO: throw exception
+            return 0;
+        }
+
+        return rankList.get(0);
+    }
+
+    public boolean isCardValid() {
+        boolean isKindValid = StandardDeckUtils.CARD_KIND_SET.stream().anyMatch(i -> i == this.kind);
+
+        if (getRank() == 0 || !isKindValid) {
+            return false;
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CardDTO cardDTO = (CardDTO) o;
+        return Objects.equals(value, cardDTO.value) &&
+                Objects.equals(kind, cardDTO.kind);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value, kind);
     }
 }

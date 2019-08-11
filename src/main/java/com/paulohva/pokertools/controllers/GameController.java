@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Controller
@@ -29,25 +30,20 @@ public class GameController {
     @PostMapping(path = "/evaluatehands")
     public ResponseEntity evaluateHands(@RequestBody PlayerHandListDTO playerHandListDTO){
 
-        List<CardDTO> allSentCards = playerHandListDTO.getPlayers()
+
+        // todo conversão pra set, pensar sobre isso, se fica List ou Set no DTO
+        Set<CardDTO> allSentCards = playerHandListDTO.getPlayers()
                 .stream()
                 .map(x -> x.getCards())
                 .flatMap(x -> x.stream())
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
 
         if(!evaluateService.isCardsValid(allSentCards)) {
-            // todo:return error;
-
-            System.out.println(allSentCards.get(0).getRank());
-
+            //todo colocar alguma mensagem
             return  ResponseEntity.badRequest().build();
         }
 
         HandResultDTO handResultDTO = evaluateService.evaluateHands(playerHandListDTO);
-
-
-
-
 
         return new ResponseEntity<>(handResultDTO,
                 HttpStatus.OK);

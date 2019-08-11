@@ -5,9 +5,10 @@ import com.paulohva.pokertools.dto.HandResultDTO;
 import com.paulohva.pokertools.dto.PlayerHandListDTO;
 
 import java.util.List;
+import java.util.Set;
 
 public interface EvaluateService {
 
     HandResultDTO evaluateHands(PlayerHandListDTO playerHandListDTO);
-    boolean isCardsValid(List<CardDTO> cards);
+    boolean isCardsValid(Set<CardDTO> cards);
 }

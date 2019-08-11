@@ -5,22 +5,22 @@ import java.util.List;
 
 public class HandResultDTO implements Serializable {
     private String winnerPlayer;
+    private int handRank;
 
-    private List<String> teste;
-
-    public List<String> getTeste() {
-        return teste;
-    }
-
-    public void setTeste(List<String> teste) {
-        this.teste = teste;
+    public HandResultDTO(String winnerPlayer, int handRank) {
+        this.winnerPlayer = winnerPlayer;
+        this.handRank = handRank;
     }
 
     public HandResultDTO() {
     }
 
-    public HandResultDTO(String winnerPlayer) {
-        this.winnerPlayer = winnerPlayer;
+    public int getHandRank() {
+        return handRank;
+    }
+
+    public void setHandRank(int handRank) {
+        this.handRank = handRank;
     }
 
     public String getWinnerPlayer() {
