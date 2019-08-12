@@ -27,10 +27,26 @@ public class EvaluateServiceImpl implements EvaluateService {
             handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerOne());
             handResultDTO.setRank(player1HandRank);
             return handResultDTO;
-        } else if (player1HandRank.getRank() > player2HandRank.getRank()) {
+        }
+        if (player1HandRank.getRank() > player2HandRank.getRank()) {
             handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerTwo());
             handResultDTO.setRank(player2HandRank);
             return handResultDTO;
+        }
+
+        // deal with draw
+        // high card situation (extract method)
+        for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
+            if (evaluateHandsRequestDTO.getPlayerOne().getCards()[index].getRank() > evaluateHandsRequestDTO.getPlayerTwo().getCards()[index].getRank()) {
+                handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerOne());
+                handResultDTO.setRank(player1HandRank);
+                return handResultDTO;
+            }
+            if (evaluateHandsRequestDTO.getPlayerOne().getCards()[index].getRank() < evaluateHandsRequestDTO.getPlayerTwo().getCards()[index].getRank()) {
+                handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerTwo());
+                handResultDTO.setRank(player2HandRank);
+                return handResultDTO;
+            }
         }
 
         //TODO pensar no draw / fazer um metodo pra isso
@@ -53,7 +69,7 @@ public class EvaluateServiceImpl implements EvaluateService {
         //todo:temtar substituir por um stream
         for (CardDTO card : allCardsDistinct) {
             if (!card.isCardValid()) {
-               throw new InvalidRequestException(String.format("Invalid card: %s",card));
+                throw new InvalidRequestException(String.format("Invalid card: %s", card));
             }
         }
     }
@@ -87,6 +103,30 @@ public class EvaluateServiceImpl implements EvaluateService {
         if (handKindGrouped.size() == 1) {
             return HandRankEnum.FLUSH;
         }
+
+        // two card ranked grouped means full house or a four in a kind
+        if (handCardRankGrouped.size() == 2) {
+            // condition to be a four in a kind
+            if (handCardRankGrouped.values().stream().anyMatch(i -> i == 4L)) {
+                return HandRankEnum.FOUR_OF_A_KIND;
+            }
+            return HandRankEnum.FULL_HOUSE;
+        }
+
+        // three group of cards means minimum two pairs
+        if (handCardRankGrouped.size() == 3) {
+            if (handCardRankGrouped.values().stream().filter(i -> i == 2L).count() == 2) {
+                return HandRankEnum.TWO_PAIR;
+            }
+            if (handCardRankGrouped.values().stream().filter(i -> i == 3L).count() == 1) {
+                return HandRankEnum.THREE_OF_A_KIND;
+            }
+        }
+
+        if (handCardRankGrouped.values().stream().filter(i -> i == 2L).count() == 1) {
+            return HandRankEnum.ONE_PAIR;
+        }
+
         return HandRankEnum.HIGH_CARD;
     }
 }

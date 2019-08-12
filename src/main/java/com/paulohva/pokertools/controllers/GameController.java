@@ -27,8 +27,9 @@ public class GameController {
 
     @PostMapping(path = "/evaluatehands")
     public ResponseEntity evaluateHands(@RequestBody @Valid EvaluateHandsRequestDTO evaluateHandsRequestDTO){
-        // todo conversão pra set, pensar sobre isso, se fica List ou Set no DTO
-        evaluateService.isAllCardsValid(evaluateHandsRequestDTO);
+        // exception handler catch if anything wrong
+        evaluateService.verifyAllCardsValid(evaluateHandsRequestDTO);
+
         EvaluateHandsResultDTO handResultDTO = evaluateService.evaluateHands(evaluateHandsRequestDTO);
 
         return new ResponseEntity<>(handResultDTO, HttpStatus.OK);
