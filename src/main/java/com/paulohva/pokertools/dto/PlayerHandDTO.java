@@ -1,11 +1,14 @@
 package com.paulohva.pokertools.dto;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
 
 public class PlayerHandDTO implements Serializable {
 
+    @NotNull
     private String playerName;
+    @NotNull
     private CardDTO[] cards;
 
     public PlayerHandDTO(String playerName, CardDTO[] cards) {
@@ -32,7 +35,6 @@ public class PlayerHandDTO implements Serializable {
         this.cards = cards;
     }
 
-    //todo checa o estado atual
     public boolean isValuesConsecutive() {
         for(int index = 0; index < cards.length; index++) {
             if(index == cards.length - 1) {
@@ -45,5 +47,4 @@ public class PlayerHandDTO implements Serializable {
         return true;
     }
 
-    public List<CardDTO> getCardsOrdened
 }

@@ -1,7 +1,6 @@
 package com.paulohva.pokertools.dto;
 
-import com.paulohva.pokertools.utils.StandardDeckUtils;
-import org.jboss.jandex.Index;
+import com.paulohva.pokertools.utils.PokerGameUtils;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -46,7 +45,7 @@ public class CardDTO implements Serializable {
         }
         //todo exception handler
         try {
-            rankList = StandardDeckUtils.CARD_VALUE_TO_RANK.entrySet()
+            rankList = PokerGameUtils.CARD_VALUE_TO_RANK.entrySet()
                     .stream()
                     .filter(i -> i.getKey().equals(value))
                     .map(m -> m.getValue()).collect(Collectors.toList());
@@ -63,7 +62,7 @@ public class CardDTO implements Serializable {
     }
 
     public boolean isCardValid() {
-        boolean isKindValid = StandardDeckUtils.CARD_KIND_SET.stream().anyMatch(i -> i == this.kind);
+        boolean isKindValid = PokerGameUtils.CARD_KIND_SET.stream().anyMatch(i -> i == this.kind);
 
         if (getRank() == 0 || !isKindValid) {
             return false;
@@ -84,5 +83,13 @@ public class CardDTO implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(value, kind);
+    }
+
+    @Override
+    public String toString() {
+        return "CardDTO{" +
+                "value='" + value + '\'' +
+                ", kind=" + kind +
+                '}';
     }
 }

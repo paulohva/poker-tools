@@ -1,17 +1,20 @@
 package com.paulohva.pokertools.dto;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
 
-public class PlayerHandListDTO implements Serializable {
+public class EvaluateHandsRequestDTO implements Serializable {
 
+    @NotNull
     private PlayerHandDTO playerOne;
+    @NotNull
     private PlayerHandDTO playerTwo;
 
-    public PlayerHandListDTO() {
+    public EvaluateHandsRequestDTO() {
     }
 
-    public PlayerHandListDTO(PlayerHandDTO playerOne, PlayerHandDTO playerTwo) {
+    public EvaluateHandsRequestDTO(PlayerHandDTO playerOne, PlayerHandDTO playerTwo) {
         this.playerOne = playerOne;
         this.playerTwo = playerTwo;
     }

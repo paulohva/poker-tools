@@ -5,11 +5,12 @@ import com.paulohva.pokertools.dto.CardDTO;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public final class StandardDeckUtils {
+public final class PokerGameUtils {
 
-    private StandardDeckUtils() {
+    private PokerGameUtils() {
     }
 
+    public final static int NUMBER_OF_CARDS_IN_HAND = 5;
 
     public final static Map<String, Integer> CARD_VALUE_TO_RANK = new HashMap<String, Integer>() {{
         put("2", 2);

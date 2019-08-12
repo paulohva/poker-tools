@@ -1,111 +1,92 @@
 package com.paulohva.pokertools.services;
 
-import com.paulohva.pokertools.dto.CardDTO;
-import com.paulohva.pokertools.dto.EvaluateHandResultDTO;
-import com.paulohva.pokertools.dto.PlayerHandDTO;
-import com.paulohva.pokertools.dto.PlayerHandListDTO;
+import com.paulohva.pokertools.dto.*;
+import com.paulohva.pokertools.services.exception.InvalidRequestException;
+import com.paulohva.pokertools.utils.PokerGameUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class EvaluateServiceImpl implements EvaluateService {
     @Override
-    public EvaluateHandResultDTO evaluateHands(PlayerHandListDTO playerHandListDTO) {
-        EvaluateHandResultDTO handResultDTO = new EvaluateHandResultDTO();
+    public EvaluateHandsResultDTO evaluateHands(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+        EvaluateHandsResultDTO handResultDTO = new EvaluateHandsResultDTO();
 
         //TODO completamente errado, arrumar
         //TODO COLOCAR INDEXOUTOFBOUNDS NO EXCEPTION HANDER
-        int player1HandRank = getHandRank(playerHandListDTO.getPlayerOne());
-        int player2HandRank = getHandRank(playerHandListDTO.getPlayerTwo());
+        HandRankEnum player1HandRank = getHandRank(evaluateHandsRequestDTO.getPlayerOne());
+        HandRankEnum player2HandRank = getHandRank(evaluateHandsRequestDTO.getPlayerTwo());
 
         // less is better;
-        if (player1HandRank < player2HandRank) {
-
+        // TODO: expain this rule
+        if (player1HandRank.getRank() < player2HandRank.getRank()) {
             //todo method to set winner
-            handResultDTO.setWinnerPlayer("Player1");
-            handResultDTO.setHandRank(player1HandRank);
+            handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerOne());
+            handResultDTO.setRank(player1HandRank);
             return handResultDTO;
-        } else if (player1HandRank > player2HandRank) {
-            handResultDTO.setWinnerPlayer("Player2");
-            handResultDTO.setHandRank(player2HandRank);
+        } else if (player1HandRank.getRank() > player2HandRank.getRank()) {
+            handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerTwo());
+            handResultDTO.setRank(player2HandRank);
             return handResultDTO;
         }
 
-
-        handResultDTO.setWinnerPlayer("Draw");
-        handResultDTO.setHandRank(0);
+        //TODO pensar no draw / fazer um metodo pra isso
+        handResultDTO.setRank(HandRankEnum.DRAW);
         return handResultDTO;
-        // draw
-        //todo
-
-
-    }
-
-/*    private HandResultDTO evaluateDraw(PlayerHandListDTO players, int handRank) {
-        //TODO transformar o handRank em enumerator, tambem qualquer string que tiver
-        if(handRank == 1 || handRank == 4 || handRank == 5) {
-            for (CardDTO card: players.get
-                 ) {
-
-            }
-        }
-    }*/
-
-    //todo fix to return rank + high card 1 and 2 (new dto)
-    private int getHandRank(PlayerHandDTO hand) {
-
-        //TODO tentar ordernar o set
-//TODO fazer a ordenacao antes, na etapa de validacao e ja deixar no objeto da lista de cartas
-        
-
-        hand.setCards(Arrays.sort(hand.getCards());
-
-        hand.getCards().sort(Comparator.comparing(i -> i.getRank()));
-
-        //Group Kind
-        Map<Character, Long> handKindGrouped = hand.getCards().stream().collect(Collectors.groupingBy(CardDTO::getKind, Collectors.counting()));
-        //Group card rank
-        Map<Integer, Long> handCardRankGrouped = hand.getCards().stream().collect(Collectors.groupingBy(CardDTO::getRank, Collectors.counting()));
-
-        if (hand.isValuesConsecutive()) {
-            if (handKindGrouped.size() == 1) {
-                return 1;
-            }
-            //TODO PROBLEMA DO AS! ele pode techar sequencia atras ou na frente
-            return 5;
-        }
-
-        if (handKindGrouped.size() == 1) {
-            return 4;
-        }
-
-        return 9;
     }
 
     @Override
-    public boolean isAllCardsValid(Set<CardDTO> cards) {
+    public void verifyAllCardsValid(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+        CardDTO[] playerOneCards = evaluateHandsRequestDTO.getPlayerOne().getCards();
+        CardDTO[] playerTwoCards = evaluateHandsRequestDTO.getPlayerTwo().getCards();
 
-        //todo faltando os comentarios
-        if (cards == null || cards.size() != 10) {
-            return false;
+        //TODO: entender melhor esse method reference
+        // all cards concatenation with distinct. CardDTO equals method uses 'kind' and 'value' properties.
+        CardDTO[] allCardsDistinct = Stream.concat(Arrays.stream(playerOneCards), Arrays.stream(playerTwoCards)).distinct().toArray(CardDTO[]::new);
+
+        if (allCardsDistinct.length != (PokerGameUtils.NUMBER_OF_CARDS_IN_HAND * 2)) {
+            throw new InvalidRequestException("Card missing or duplicated");
         }
-
         //todo:temtar substituir por um stream
-        for (CardDTO card : cards) {
+        for (CardDTO card : allCardsDistinct) {
             if (!card.isCardValid()) {
-                return false;
+               throw new InvalidRequestException(String.format("Invalid card: %s",card));
             }
         }
+    }
 
-        Set<CardDTO> cardsSet = new HashSet<>(cards);
+    @Override
+    public EvaluateHandsRequestDTO orderAndSortCards(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+        evaluateHandsRequestDTO.getPlayerOne().setCards(orderAndSortHand(evaluateHandsRequestDTO.getPlayerOne().getCards()));
+        evaluateHandsRequestDTO.getPlayerTwo().setCards(orderAndSortHand(evaluateHandsRequestDTO.getPlayerTwo().getCards()));
+        return evaluateHandsRequestDTO;
+    }
 
-        if (cards.size() != 10) {
-            return false;
+    private CardDTO[] orderAndSortHand(CardDTO[] cards) {
+        return (CardDTO[]) Arrays.stream(cards).sorted(Comparator.comparing(i -> i.getRank())).distinct().toArray();
+    }
+
+    private HandRankEnum getHandRank(PlayerHandDTO playerHandDTO) {
+        CardDTO[] playerCards = playerHandDTO.getCards();
+        // group by card kind
+        Map<Character, Long> handKindGrouped = Arrays.stream(playerCards).collect(Collectors.groupingBy(CardDTO::getKind, Collectors.counting()));
+        // group by card rank
+        Map<Integer, Long> handCardRankGrouped = Arrays.stream(playerCards).collect(Collectors.groupingBy(CardDTO::getRank, Collectors.counting()));
+        if (playerHandDTO.isValuesConsecutive()) {
+            // all cards are same kind
+            //TODO: check minimal value for straight sequence
+            if (handKindGrouped.size() == 1) {
+                return HandRankEnum.STRAIGHT_FLUSH;
+            }
+            return HandRankEnum.STRAIGHT;
         }
-
-        //TODO FALTOU VERIFICAR CARTA REPETIDA
-        return true;
+        // all cards are same kind
+        if (handKindGrouped.size() == 1) {
+            return HandRankEnum.FLUSH;
+        }
+        return HandRankEnum.HIGH_CARD;
     }
 }

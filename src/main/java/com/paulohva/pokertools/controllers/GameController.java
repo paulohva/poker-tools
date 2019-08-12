@@ -1,8 +1,8 @@
 package com.paulohva.pokertools.controllers;
 
-import com.paulohva.pokertools.dto.CardDTO;
-import com.paulohva.pokertools.dto.EvaluateHandResultDTO;
-import com.paulohva.pokertools.dto.PlayerHandListDTO;
+
+import com.paulohva.pokertools.dto.EvaluateHandsResultDTO;
+import com.paulohva.pokertools.dto.EvaluateHandsRequestDTO;
 import com.paulohva.pokertools.services.EvaluateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,9 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import javax.validation.Valid;
 
 @Controller
 @RequestMapping("/api/game")
@@ -28,22 +26,11 @@ public class GameController {
     }
 
     @PostMapping(path = "/evaluatehands")
-    public ResponseEntity evaluateHands(@RequestBody PlayerHandListDTO playerHandListDTO){
+    public ResponseEntity evaluateHands(@RequestBody @Valid EvaluateHandsRequestDTO evaluateHandsRequestDTO){
         // todo conversão pra set, pensar sobre isso, se fica List ou Set no DTO
+        evaluateService.isAllCardsValid(evaluateHandsRequestDTO);
+        EvaluateHandsResultDTO handResultDTO = evaluateService.evaluateHands(evaluateHandsRequestDTO);
 
-        // using a HashSet to avoid repeated cards
-        Set<CardDTO> allSentCardsSet = new HashSet<>();
-        allSentCardsSet.addAll(Arrays.asList(playerHandListDTO.getPlayerOne().getCards()));
-        allSentCardsSet.addAll(Arrays.asList(playerHandListDTO.getPlayerTwo().getCards()));
-
-        if(!evaluateService.isAllCardsValid(allSentCardsSet)) {
-            //todo colocar alguma mensagem
-            return  ResponseEntity.badRequest().build();
-        }
-
-        EvaluateHandResultDTO handResultDTO = evaluateService.evaluateHands(playerHandListDTO);
-
-        return new ResponseEntity<>(handResultDTO,
-                HttpStatus.OK);
+        return new ResponseEntity<>(handResultDTO, HttpStatus.OK);
     }
 }
