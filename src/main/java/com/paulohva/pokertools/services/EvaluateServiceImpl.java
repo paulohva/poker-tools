@@ -15,36 +15,40 @@ public class EvaluateServiceImpl implements EvaluateService {
     public EvaluateHandsResultDTO evaluateHands(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
         EvaluateHandsResultDTO handResultDTO = new EvaluateHandsResultDTO();
 
-        //TODO completamente errado, arrumar
-        //TODO COLOCAR INDEXOUTOFBOUNDS NO EXCEPTION HANDER
-        HandRankEnum player1HandRank = getHandRank(evaluateHandsRequestDTO.getPlayerOne().getCards());
-        HandRankEnum player2HandRank = getHandRank(evaluateHandsRequestDTO.getPlayerTwo().getCards());
+        CardDTO[] playerOneCards = evaluateHandsRequestDTO.getPlayerOne().getCards();
+        CardDTO[] playerTwoCards = evaluateHandsRequestDTO.getPlayerTwo().getCards();
+
+        HandRankEnum playerOneHandRank = getHandRank(playerOneCards);
+        fixAceToFiveStraight(playerOneCards, playerOneHandRank);
+
+        HandRankEnum playerTwoHandRank = getHandRank(playerTwoCards);
+        fixAceToFiveStraight(playerTwoCards, playerTwoHandRank);
 
         // less is better;
         // TODO: expain this rule
-        if (player1HandRank.getRank() < player2HandRank.getRank()) {
+        if (playerOneHandRank.getRank() < playerTwoHandRank.getRank()) {
             //todo method to set winner
             handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerOne());
-            handResultDTO.setRank(player1HandRank);
+            handResultDTO.setRank(playerOneHandRank);
             return handResultDTO;
         }
-        if (player1HandRank.getRank() > player2HandRank.getRank()) {
+        if (playerOneHandRank.getRank() > playerTwoHandRank.getRank()) {
             handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerTwo());
-            handResultDTO.setRank(player2HandRank);
+            handResultDTO.setRank(playerTwoHandRank);
             return handResultDTO;
         }
 
         // deal with draw
         // high card situation (extract method)
         for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
-            if (evaluateHandsRequestDTO.getPlayerOne().getCards()[index].getRank() > evaluateHandsRequestDTO.getPlayerTwo().getCards()[index].getRank()) {
+            if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
                 handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerOne());
-                handResultDTO.setRank(player1HandRank);
+                handResultDTO.setRank(playerOneHandRank);
                 return handResultDTO;
             }
-            if (evaluateHandsRequestDTO.getPlayerOne().getCards()[index].getRank() < evaluateHandsRequestDTO.getPlayerTwo().getCards()[index].getRank()) {
+            if (playerOneCards[index].getRank() < playerTwoCards[index].getRank()) {
                 handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerTwo());
-                handResultDTO.setRank(player2HandRank);
+                handResultDTO.setRank(playerTwoHandRank);
                 return handResultDTO;
             }
         }
@@ -52,6 +56,17 @@ public class EvaluateServiceImpl implements EvaluateService {
         //TODO pensar no draw / fazer um metodo pra isso
         handResultDTO.setRank(HandRankEnum.DRAW);
         return handResultDTO;
+    }
+
+    private void fixAceToFiveStraight(CardDTO[] cards, HandRankEnum handRank) {
+        if(handRank.equals(HandRankEnum.STRAIGHT) || handRank.equals(HandRankEnum.STRAIGHT_FLUSH)) {
+            // trick to deal with five-high straight
+            if(cards[0].getRank() == 14 && cards[1].getRank() == 5) {
+                CardDTO auxCard = cards[0];
+                System.arraycopy(cards, 1, cards, 0, 4);
+                cards[4] = auxCard;
+            }
+        }
     }
 
     @Override
@@ -83,12 +98,6 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     private CardDTO[] sortHand(CardDTO[] cards) {
         CardDTO[] sortedCards = Arrays.stream(cards).sorted(Comparator.comparing(i -> i.getRank(),Comparator.reverseOrder())).distinct().toArray(CardDTO[]::new);
-        // exchange positions when its a straight with a five high
-        if(isHandCardsRankConsecutive(sortedCards, false) && sortedCards[0].getRank() == 14 && sortedCards[4].getRank() == 2) {
-            CardDTO auxCard = sortedCards[0];
-            sortedCards[0] = sortedCards[4];
-            sortedCards[4] = auxCard;
-        }
         return sortedCards;
     }
 
@@ -97,9 +106,8 @@ public class EvaluateServiceImpl implements EvaluateService {
         Map<Character, Long> handKindGrouped = Arrays.stream(playerCards).collect(Collectors.groupingBy(CardDTO::getKind, Collectors.counting()));
         // group by card rank
         Map<Integer, Long> handCardRankGrouped = Arrays.stream(playerCards).collect(Collectors.groupingBy(CardDTO::getRank, Collectors.counting()));
-        if (isHandCardsRankConsecutive(playerCards, true)) {
+        if (isHandCardsRankConsecutive(playerCards)) {
             // all cards are same kind
-            //TODO: check minimal value for straight sequence
             if (handKindGrouped.size() == 1) {
                 return HandRankEnum.STRAIGHT_FLUSH;
             }
@@ -136,21 +144,19 @@ public class EvaluateServiceImpl implements EvaluateService {
         return HandRankEnum.HIGH_CARD;
     }
 
-    private boolean isHandCardsRankConsecutive(CardDTO[] cards, boolean checkAceAsLowestCard) {
+    private boolean isHandCardsRankConsecutive(CardDTO[] cards) {
         // algorithm to check of a ordered array of cards is consecutive, including ace a low card into a straight
         for(int index = 0; index < cards.length; index++) {
             if(index == cards.length - 1) {
-                if(checkAceAsLowestCard && cards[index].getRank() != 14) {
-                    return false;
-                }
                 continue;
             }
 
-            if(checkAceAsLowestCard && cards[index].getRank() == 14) {
+            // trick to consider ace as part of a straight five-high
+            if(index == 0 && cards[index].getRank() == 14 && cards[index + 1].getRank() == 5) {
                 continue;
             }
 
-            if(cards[index + 1].getRank() - cards[index].getRank() != 1) {
+            if(cards[index].getRank() - cards[index + 1].getRank() != 1) {
                 return false;
             }
         }
