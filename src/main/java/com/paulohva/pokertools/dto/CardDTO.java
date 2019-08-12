@@ -1,15 +1,20 @@
 package com.paulohva.pokertools.dto;
 
+import com.paulohva.pokertools.services.exception.InvalidRequestException;
 import com.paulohva.pokertools.utils.PokerGameUtils;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class CardDTO implements Serializable {
+    @NotNull
     private String value;
+    @NotNull
     private Character kind;
 
     public CardDTO() {
@@ -37,37 +42,23 @@ public class CardDTO implements Serializable {
     }
 
     public int getRank() {
-        List<Integer> rankList = new ArrayList<>();
-
-        if (this.value == null) {
-            //todo verify this
-            return 0;
-        }
-        //todo exception handler
+        Optional<Integer> rankList;
         try {
             rankList = PokerGameUtils.CARD_VALUE_TO_RANK.entrySet()
                     .stream()
                     .filter(i -> i.getKey().equals(value))
-                    .map(m -> m.getValue()).collect(Collectors.toList());
+                    .map(m -> m.getValue()).findFirst();
         } catch (IndexOutOfBoundsException e) {
-            return 0;
+            throw new InvalidRequestException(e.getMessage());
         }
-
-        if (rankList.size() != 1) {
-            //TODO: throw exception
-            return 0;
-        }
-
-        return rankList.get(0);
+        return rankList.orElseThrow(() -> new InvalidRequestException(String.format("Card value not exists: %s", toString())));
     }
 
     public boolean isCardValid() {
         boolean isKindValid = PokerGameUtils.CARD_KIND_SET.stream().anyMatch(i -> i == this.kind);
-
         if (getRank() == 0 || !isKindValid) {
             return false;
         }
-
         return true;
     }
 

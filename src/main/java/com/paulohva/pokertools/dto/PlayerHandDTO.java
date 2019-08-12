@@ -35,16 +35,6 @@ public class PlayerHandDTO implements Serializable {
         this.cards = cards;
     }
 
-    public boolean isValuesConsecutive() {
-        for(int index = 0; index < cards.length; index++) {
-            if(index == cards.length - 1) {
-                continue;
-            }
-            if(cards[index + 1].getRank() - cards[index].getRank() != 1) {
-                return false;
-            }
-        }
-        return true;
-    }
+
 
 }

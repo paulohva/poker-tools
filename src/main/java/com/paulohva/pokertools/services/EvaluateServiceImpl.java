@@ -17,8 +17,8 @@ public class EvaluateServiceImpl implements EvaluateService {
 
         //TODO completamente errado, arrumar
         //TODO COLOCAR INDEXOUTOFBOUNDS NO EXCEPTION HANDER
-        HandRankEnum player1HandRank = getHandRank(evaluateHandsRequestDTO.getPlayerOne());
-        HandRankEnum player2HandRank = getHandRank(evaluateHandsRequestDTO.getPlayerTwo());
+        HandRankEnum player1HandRank = getHandRank(evaluateHandsRequestDTO.getPlayerOne().getCards());
+        HandRankEnum player2HandRank = getHandRank(evaluateHandsRequestDTO.getPlayerTwo().getCards());
 
         // less is better;
         // TODO: expain this rule
@@ -76,22 +76,28 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     @Override
     public EvaluateHandsRequestDTO orderAndSortCards(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
-        evaluateHandsRequestDTO.getPlayerOne().setCards(orderAndSortHand(evaluateHandsRequestDTO.getPlayerOne().getCards()));
-        evaluateHandsRequestDTO.getPlayerTwo().setCards(orderAndSortHand(evaluateHandsRequestDTO.getPlayerTwo().getCards()));
+        evaluateHandsRequestDTO.getPlayerOne().setCards(sortHand(evaluateHandsRequestDTO.getPlayerOne().getCards()));
+        evaluateHandsRequestDTO.getPlayerTwo().setCards(sortHand(evaluateHandsRequestDTO.getPlayerTwo().getCards()));
         return evaluateHandsRequestDTO;
     }
 
-    private CardDTO[] orderAndSortHand(CardDTO[] cards) {
-        return (CardDTO[]) Arrays.stream(cards).sorted(Comparator.comparing(i -> i.getRank())).distinct().toArray();
+    private CardDTO[] sortHand(CardDTO[] cards) {
+        CardDTO[] sortedCards = Arrays.stream(cards).sorted(Comparator.comparing(i -> i.getRank(),Comparator.reverseOrder())).distinct().toArray(CardDTO[]::new);
+        // exchange positions when its a straight with a five high
+        if(isHandCardsRankConsecutive(sortedCards, false) && sortedCards[0].getRank() == 14 && sortedCards[4].getRank() == 2) {
+            CardDTO auxCard = sortedCards[0];
+            sortedCards[0] = sortedCards[4];
+            sortedCards[4] = auxCard;
+        }
+        return sortedCards;
     }
 
-    private HandRankEnum getHandRank(PlayerHandDTO playerHandDTO) {
-        CardDTO[] playerCards = playerHandDTO.getCards();
+    private HandRankEnum getHandRank(CardDTO[] playerCards) {
         // group by card kind
         Map<Character, Long> handKindGrouped = Arrays.stream(playerCards).collect(Collectors.groupingBy(CardDTO::getKind, Collectors.counting()));
         // group by card rank
         Map<Integer, Long> handCardRankGrouped = Arrays.stream(playerCards).collect(Collectors.groupingBy(CardDTO::getRank, Collectors.counting()));
-        if (playerHandDTO.isValuesConsecutive()) {
+        if (isHandCardsRankConsecutive(playerCards, true)) {
             // all cards are same kind
             //TODO: check minimal value for straight sequence
             if (handKindGrouped.size() == 1) {
@@ -128,5 +134,26 @@ public class EvaluateServiceImpl implements EvaluateService {
         }
 
         return HandRankEnum.HIGH_CARD;
+    }
+
+    private boolean isHandCardsRankConsecutive(CardDTO[] cards, boolean checkAceAsLowestCard) {
+        // algorithm to check of a ordered array of cards is consecutive, including ace a low card into a straight
+        for(int index = 0; index < cards.length; index++) {
+            if(index == cards.length - 1) {
+                if(checkAceAsLowestCard && cards[index].getRank() != 14) {
+                    return false;
+                }
+                continue;
+            }
+
+            if(checkAceAsLowestCard && cards[index].getRank() == 14) {
+                continue;
+            }
+
+            if(cards[index + 1].getRank() - cards[index].getRank() != 1) {
+                return false;
+            }
+        }
+        return true;
     }
 }
