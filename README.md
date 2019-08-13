@@ -8,6 +8,11 @@ An API that provides endpoints for poker games interfaces.
 
 Current version can evaluate two players cards hand to obtain the winner.
 
+## Requirements
+
+* JDK 8
+* Maven 3
+
 ## How to run
 
 ```sh
