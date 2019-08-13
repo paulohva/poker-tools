@@ -2,7 +2,7 @@
 
 ## About Poker Tools API
 
-An API that provides endpoints for poker games
+An API that provides endpoints for poker games interfaces.
 
 ## Key Features
 
