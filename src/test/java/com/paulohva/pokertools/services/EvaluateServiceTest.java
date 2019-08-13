@@ -212,7 +212,7 @@ public class EvaluateServiceTest {
         EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
         request.setPlayerOne(createPlayerAndHighCard("John"));
         request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
-        request.getPlayerOne().setCards(createFourInAKind());
+        request.getPlayerOne().setCards(createFourInAKindHigh());
 
         //when
         request = evaluateService.sortPlayersHand(request);
@@ -222,6 +222,48 @@ public class EvaluateServiceTest {
         //then
         assertEquals(result.getHighRank(), HandRankEnum.FOUR_OF_A_KIND);
         assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_FourInAKindDraw() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createFourInAKindHigh());
+        request.getPlayerTwo().setCards(createFourInAKindLow());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
+        assertEquals(result.getHighRank(),HandRankEnum.DRAW);
+        result = evaluateService.tryResolveDraw(request);
+
+        //then
+        assertEquals(result.getHighRank(), HandRankEnum.FOUR_OF_A_KIND);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_FourInAKindDrawWithKicker() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createFourInAKindHighWithLowKicker());
+        request.getPlayerTwo().setCards(createFourInAKindHigh());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
+        assertEquals(result.getHighRank(),HandRankEnum.DRAW);
+        result = evaluateService.tryResolveDraw(request);
+
+        //then
+        assertEquals(result.getHighRank(), HandRankEnum.FOUR_OF_A_KIND);
+        assertEquals(result.getPlayerName(), request.getPlayerTwo().getPlayerName());
     }
 
     @Test
@@ -248,7 +290,7 @@ public class EvaluateServiceTest {
         EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
         request.setPlayerOne(createPlayerAndHighCard("John"));
         request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
-        request.getPlayerOne().setCards(createTwoPair());
+        request.getPlayerOne().setCards(createTwoPairHigh());
 
         //when
         request = evaluateService.sortPlayersHand(request);
@@ -291,10 +333,54 @@ public class EvaluateServiceTest {
         request = evaluateService.sortPlayersHand(request);
         request = evaluateService.getHandRanks(request);
         EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
+        assertEquals(result.getHighRank(),HandRankEnum.DRAW);
+        result = evaluateService.tryResolveDraw(request);
 
         //then
         assertEquals(result.getHighRank(), HandRankEnum.DRAW);
         assertNull(result.getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_TwoPairDrawWithKicker() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createTwoPairHigh());
+        request.getPlayerTwo().setCards(createTwoPairHighWithLowKicker());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
+        assertEquals(result.getHighRank(),HandRankEnum.DRAW);
+        result = evaluateService.tryResolveDraw(request);
+
+        //then
+        assertEquals(result.getHighRank(), HandRankEnum.TWO_PAIR);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_TwoPairDraw() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createTwoPairLow());
+        request.getPlayerTwo().setCards(createTwoPairHigh());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
+        assertEquals(result.getHighRank(),HandRankEnum.DRAW);
+        result = evaluateService.tryResolveDraw(request);
+
+        //then
+        assertEquals(result.getHighRank(), HandRankEnum.TWO_PAIR);
+        assertEquals(result.getPlayerName(), request.getPlayerTwo().getPlayerName());
     }
 
     private PlayerHandDTO createPlayerAndHighCard(String name) {
@@ -406,13 +492,33 @@ public class EvaluateServiceTest {
         return cards.toArray(new CardDTO[0]);
     }
 
-    private CardDTO[] createFourInAKind() {
+    private CardDTO[] createFourInAKindHigh() {
         List<CardDTO> cards = new ArrayList<>();
         cards.add(new CardDTO("K", 'D'));
         cards.add(new CardDTO("K", 'C'));
         cards.add(new CardDTO("K", 'H'));
         cards.add(new CardDTO("K", 'S'));
         cards.add(new CardDTO("10", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createFourInAKindLow() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("Q", 'D'));
+        cards.add(new CardDTO("Q", 'C'));
+        cards.add(new CardDTO("Q", 'H'));
+        cards.add(new CardDTO("Q", 'S'));
+        cards.add(new CardDTO("10", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createFourInAKindHighWithLowKicker() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("K", 'D'));
+        cards.add(new CardDTO("K", 'C'));
+        cards.add(new CardDTO("K", 'H'));
+        cards.add(new CardDTO("K", 'S'));
+        cards.add(new CardDTO("8", 'D'));
         return cards.toArray(new CardDTO[0]);
     }
 
@@ -426,13 +532,36 @@ public class EvaluateServiceTest {
         return cards.toArray(new CardDTO[0]);
     }
 
-    private CardDTO[] createTwoPair() {
+    private CardDTO[] createTwoPairHigh() {
         List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("Q", 'H'));
+        cards.add(new CardDTO("Q", 'S'));
         cards.add(new CardDTO("K", 'D'));
         cards.add(new CardDTO("K", 'C'));
+
+        cards.add(new CardDTO("10", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createTwoPairHighWithLowKicker() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("Q", 'H'));
+        cards.add(new CardDTO("Q", 'S'));
+        cards.add(new CardDTO("K", 'D'));
+        cards.add(new CardDTO("K", 'C'));
+
+        cards.add(new CardDTO("9", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createTwoPairLow() {
+        List<CardDTO> cards = new ArrayList<>();
         cards.add(new CardDTO("Q", 'H'));
         cards.add(new CardDTO("Q", 'S'));
         cards.add(new CardDTO("10", 'D'));
+        cards.add(new CardDTO("10", 'C'));
+
+        cards.add(new CardDTO("8", 'D'));
         return cards.toArray(new CardDTO[0]);
     }
 

@@ -45,10 +45,6 @@ public class EvaluateServiceImpl implements EvaluateService {
 
         // deal with draw
         // high card situation (extract method)
-        if (request.getPlayerOne().getHandRank().equals(HandRankEnum.STRAIGHT)
-                || request.getPlayerOne().getHandRank().equals(HandRankEnum.STRAIGHT_FLUSH)
-                || request.getPlayerOne().getHandRank().equals(HandRankEnum.HIGH_CARD)
-                || request.getPlayerOne().getHandRank().equals(HandRankEnum.FLUSH)) {
             for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
                 if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
                     result.setPlayerName(request.getPlayerOne().getPlayerName());
@@ -61,7 +57,6 @@ public class EvaluateServiceImpl implements EvaluateService {
                     return result;
                 }
             }
-        }
 
 
         //TODO: tratar os grupos, grupo com mais cartas tem vantagem no desempate
@@ -138,13 +133,14 @@ public class EvaluateServiceImpl implements EvaluateService {
 
         // group by card rank to order repeated ranks
         // todo arruamr nomes das variaveis
-        Map<Integer, List<CardDTO>> collect = Arrays.stream(sortedCards).sorted(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder())).collect(Collectors.groupingBy(CardDTO::getRank));
+        Map<Integer, List<CardDTO>> collect = Arrays.stream(sortedCards).collect(Collectors.groupingBy(CardDTO::getRank));
 
         if (collect.size() < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND) {
             List<CardDTO> newSort = new ArrayList<>();
             for (int index = 4; index > 0; index--) {
                 int finalIndex = index;
                 List<CardDTO> temp = collect.values().stream().filter(i -> i.size() == finalIndex).flatMap(List::stream).collect(Collectors.toList());
+                temp.sort(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder()));
                 newSort.addAll(temp);
             }
             sortedCards = newSort.toArray(sortedCards);
