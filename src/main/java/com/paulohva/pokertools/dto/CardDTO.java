@@ -41,6 +41,11 @@ public class CardDTO implements Serializable {
         this.kind = kind;
     }
 
+    /**
+     * Get a correspondent integer rank for a card. Example: "J" is a rank 11.
+     *
+     * @return Integer with the card value rank
+     */
     public int getRank() {
         Optional<Integer> rankList;
         try {

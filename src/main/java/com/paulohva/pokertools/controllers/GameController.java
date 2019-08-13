@@ -27,15 +27,17 @@ public class GameController {
     }
 
     @PostMapping(path = "/evaluatehands")
-    public ResponseEntity evaluateHands(@RequestBody @Valid EvaluateHandsRequestDTO request){
-        // exception handler catch if anything wrong
+    public ResponseEntity evaluateHands(@RequestBody @Valid EvaluateHandsRequestDTO request) {
         evaluateService.verifyAllCardsValid(request);
+
+        // sort players cards
         request = evaluateService.sortPlayersHand(request);
+        // get each player hand ranks
         request = evaluateService.getHandRanks(request);
-
+        // first attempt to obtain the winner
         EvaluateHandsResultDTO result = evaluateService.getWinningHandRank(request);
-
-        if(result.getHighRank().equals(HandRankEnum.DRAW)) {
+        // if there is a draw, try to solve it
+        if (result.getHighRank().equals(HandRankEnum.DRAW)) {
             result = evaluateService.tryResolveDraw(request);
         }
 

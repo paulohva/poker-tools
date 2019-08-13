@@ -13,7 +13,7 @@ public class PokerToolsApplicationTests {
 
 	@Test
 	public void contextLoads() {
-		fail();
+
 	}
 
 

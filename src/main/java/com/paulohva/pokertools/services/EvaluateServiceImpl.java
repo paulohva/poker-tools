@@ -13,10 +13,53 @@ import java.util.stream.Stream;
 public class EvaluateServiceImpl implements EvaluateService {
 
     @Override
+    public boolean verifyAllCardsValid(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+        CardDTO[] playerOneCards = evaluateHandsRequestDTO.getPlayerOne().getCards();
+        CardDTO[] playerTwoCards = evaluateHandsRequestDTO.getPlayerTwo().getCards();
+
+        // all cards concatenation with distinct. CardDTO equals method uses 'kind' and 'value' properties.
+        CardDTO[] allCardsDistinct = Stream.concat(Arrays.stream(playerOneCards), Arrays.stream(playerTwoCards)).distinct().toArray(CardDTO[]::new);
+
+        // verify if it matches the number of unique cards
+        if (allCardsDistinct.length != (PokerGameUtils.NUMBER_OF_CARDS_IN_HAND * 2)) {
+            throw new InvalidRequestException("Card missing or duplicated");
+        }
+
+        for (CardDTO card : allCardsDistinct) {
+            if (!card.isCardValid()) {
+                throw new InvalidRequestException(String.format("Invalid card: %s", card));
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public EvaluateHandsRequestDTO sortPlayersHand(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+        evaluateHandsRequestDTO.getPlayerOne().setCards(sortHand(evaluateHandsRequestDTO.getPlayerOne().getCards()));
+        evaluateHandsRequestDTO.getPlayerTwo().setCards(sortHand(evaluateHandsRequestDTO.getPlayerTwo().getCards()));
+        return evaluateHandsRequestDTO;
+    }
+
+    @Override
+    public EvaluateHandsRequestDTO getHandRanks(EvaluateHandsRequestDTO request) {
+        CardDTO[] playerOneCards = request.getPlayerOne().getCards();
+        CardDTO[] playerTwoCards = request.getPlayerTwo().getCards();
+
+        HandRankEnum playerOneHandRank = getHandRank(playerOneCards);
+        HandRankEnum playerTwoHandRank = getHandRank(playerTwoCards);
+
+        request.getPlayerOne().setHandRank(playerOneHandRank);
+        request.getPlayerTwo().setHandRank(playerTwoHandRank);
+
+        return request;
+    }
+
+    @Override
     public EvaluateHandsResultDTO getWinningHandRank(EvaluateHandsRequestDTO request) {
         EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
-        // less is better;
-        // TODO: expain this rule
+
+
         if (request.getPlayerOne().getHandRank().getRank() < request.getPlayerTwo().getHandRank().getRank()) {
             //todo method to set winner
             result.setPlayerName(request.getPlayerOne().getPlayerName());
@@ -43,83 +86,26 @@ public class EvaluateServiceImpl implements EvaluateService {
         fixAceToFiveStraight(playerOneCards, request.getPlayerOne().getHandRank());
         fixAceToFiveStraight(playerTwoCards, request.getPlayerTwo().getHandRank());
 
-        // deal with draw
-        // high card situation (extract method)
-            for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
-                if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
-                    result.setPlayerName(request.getPlayerOne().getPlayerName());
-                    result.setHighRank(request.getPlayerOne().getHandRank());
-                    return result;
-                }
-                if (playerOneCards[index].getRank() < playerTwoCards[index].getRank()) {
-                    result.setPlayerName(request.getPlayerTwo().getPlayerName());
-                    result.setHighRank(request.getPlayerTwo().getHandRank());
-                    return result;
-                }
+        for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
+            if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
+                result.setPlayerName(request.getPlayerOne().getPlayerName());
+                result.setHighRank(request.getPlayerOne().getHandRank());
+                return result;
             }
-
-
-        //TODO: tratar os grupos, grupo com mais cartas tem vantagem no desempate
-        //four > tree > two pairs > one pair
-        // no caso do two pair, separar e tratar o que tem a maior carta priemiro
-
-        // group by card rank
-        //Map<Integer, Long> playerOneCardsGroupByRank = Arrays.stream(playerOneCards).collect(Collectors.groupingBy(CardDTO::getRank, Collectors.counting()));
-        //Map<Integer, Long> playerTwoCardsGroupByRank = Arrays.stream(playerOneCards).collect(Collectors.groupingBy(Collectors.counting(CardDTO::getRank)));
-
-
-
+            if (playerOneCards[index].getRank() < playerTwoCards[index].getRank()) {
+                result.setPlayerName(request.getPlayerTwo().getPlayerName());
+                result.setHighRank(request.getPlayerTwo().getHandRank());
+                return result;
+            }
+        }
 
         result.setHighRank(HandRankEnum.DRAW);
         return result;
     }
 
-    @Override
-    public EvaluateHandsRequestDTO getHandRanks(EvaluateHandsRequestDTO request) {
-        CardDTO[] playerOneCards = request.getPlayerOne().getCards();
-        CardDTO[] playerTwoCards = request.getPlayerTwo().getCards();
-
-        HandRankEnum playerOneHandRank = getHandRank(playerOneCards);
-        HandRankEnum playerTwoHandRank = getHandRank(playerTwoCards);
-
-        request.getPlayerOne().setHandRank(playerOneHandRank);
-        request.getPlayerTwo().setHandRank(playerTwoHandRank);
-
-        return request;
-    }
-
-    @Override
-    public boolean verifyAllCardsValid(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
-        CardDTO[] playerOneCards = evaluateHandsRequestDTO.getPlayerOne().getCards();
-        CardDTO[] playerTwoCards = evaluateHandsRequestDTO.getPlayerTwo().getCards();
-
-        //TODO: entender melhor esse method reference
-        // all cards concatenation with distinct. CardDTO equals method uses 'kind' and 'value' properties.
-        CardDTO[] allCardsDistinct = Stream.concat(Arrays.stream(playerOneCards), Arrays.stream(playerTwoCards)).distinct().toArray(CardDTO[]::new);
-
-        if (allCardsDistinct.length != (PokerGameUtils.NUMBER_OF_CARDS_IN_HAND * 2)) {
-            throw new InvalidRequestException("Card missing or duplicated");
-        }
-        //todo:temtar substituir por um stream
-        for (CardDTO card : allCardsDistinct) {
-            if (!card.isCardValid()) {
-                throw new InvalidRequestException(String.format("Invalid card: %s", card));
-            }
-        }
-
-        return true;
-    }
-
-    @Override
-    public EvaluateHandsRequestDTO sortPlayersHand(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
-        evaluateHandsRequestDTO.getPlayerOne().setCards(sortHand(evaluateHandsRequestDTO.getPlayerOne().getCards()));
-        evaluateHandsRequestDTO.getPlayerTwo().setCards(sortHand(evaluateHandsRequestDTO.getPlayerTwo().getCards()));
-        return evaluateHandsRequestDTO;
-    }
-
     private void fixAceToFiveStraight(CardDTO[] cards, HandRankEnum handRank) {
         if (handRank.equals(HandRankEnum.STRAIGHT) || handRank.equals(HandRankEnum.STRAIGHT_FLUSH)) {
-            // trick to deal with five-high straight
+            // trick to fix a five-high straight
             if (cards[0].getRank() == 14 && cards[1].getRank() == 5) {
                 CardDTO auxCard = cards[0];
                 System.arraycopy(cards, 1, cards, 0, 4);
@@ -129,24 +115,19 @@ public class EvaluateServiceImpl implements EvaluateService {
     }
 
     private CardDTO[] sortHand(CardDTO[] cards) {
-        CardDTO[] sortedCards = Arrays.stream(cards).sorted(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder())).distinct().toArray(CardDTO[]::new);
-
         // group by card rank to order repeated ranks
-        // todo arruamr nomes das variaveis
-        Map<Integer, List<CardDTO>> collect = Arrays.stream(sortedCards).collect(Collectors.groupingBy(CardDTO::getRank));
+        Map<Integer, List<CardDTO>> cardsGroupByRank = Arrays.stream(cards).collect(Collectors.groupingBy(CardDTO::getRank));
 
-        if (collect.size() < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND) {
-            List<CardDTO> newSort = new ArrayList<>();
-            for (int index = 4; index > 0; index--) {
-                int finalIndex = index;
-                List<CardDTO> temp = collect.values().stream().filter(i -> i.size() == finalIndex).flatMap(List::stream).collect(Collectors.toList());
-                temp.sort(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder()));
-                newSort.addAll(temp);
-            }
-            sortedCards = newSort.toArray(sortedCards);
+        // algorithm to sort cards putting stronger games (pair, three in a kind, etc) being first elements
+        // TODO: improve this algorithm
+        List<CardDTO> cardsSorted = new ArrayList<>();
+        for (int index = 4; index > 0; index--) {
+            int finalIndex = index;
+            List<CardDTO> temp = cardsGroupByRank.values().stream().filter(i -> i.size() == finalIndex).flatMap(List::stream).collect(Collectors.toList());
+            temp.sort(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder()));
+            cardsSorted.addAll(temp);
         }
-
-        return sortedCards;
+        return cardsSorted.toArray(new CardDTO[0]);
     }
 
     private HandRankEnum getHandRank(CardDTO[] playerCards) {
@@ -165,7 +146,6 @@ public class EvaluateServiceImpl implements EvaluateService {
         if (handKindGrouped.size() == 1) {
             return HandRankEnum.FLUSH;
         }
-
         // two card ranked grouped means full house or a four in a kind
         if (handCardRankGrouped.size() == 2) {
             // condition to be a four in a kind
@@ -174,8 +154,7 @@ public class EvaluateServiceImpl implements EvaluateService {
             }
             return HandRankEnum.FULL_HOUSE;
         }
-
-        // three group of cards means minimum two pairs
+        // three group of cards means three in kind or two pairs
         if (handCardRankGrouped.size() == 3) {
             if (handCardRankGrouped.values().stream().filter(i -> i == 2L).count() == 2) {
                 return HandRankEnum.TWO_PAIR;
@@ -184,11 +163,10 @@ public class EvaluateServiceImpl implements EvaluateService {
                 return HandRankEnum.THREE_OF_A_KIND;
             }
         }
-
+        // means one pair
         if (handCardRankGrouped.values().stream().filter(i -> i == 2L).count() == 1) {
             return HandRankEnum.ONE_PAIR;
         }
-
         return HandRankEnum.HIGH_CARD;
     }
 
@@ -198,12 +176,10 @@ public class EvaluateServiceImpl implements EvaluateService {
             if (index == cards.length - 1) {
                 continue;
             }
-
-            // trick to consider ace as part of a straight five-high
+            // trick to ace-low as consecutive part of a straight
             if (index == 0 && cards[index].getRank() == 14 && cards[index + 1].getRank() == 5) {
                 continue;
             }
-
             if (cards[index].getRank() - cards[index + 1].getRank() != 1) {
                 return false;
             }

@@ -5,6 +5,12 @@ import com.paulohva.pokertools.dto.CardDTO;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Constants from a poker game:
+ * 1 - Number of possible cards in hand
+ * 2 - Map from card Value to a Ranked number
+ * 3 - Map to evaluate possible kinds
+ */
 public final class PokerGameUtils {
 
     private PokerGameUtils() {
