@@ -37,7 +37,7 @@ http://localhost:8080/api/game/evaluatehands
             },
             {
                 "kind": "S",
-                "value": "2"
+                "value": "4"
             },
             {
                 "kind": "D",
@@ -62,7 +62,7 @@ http://localhost:8080/api/game/evaluatehands
             },
             {
                 "kind": "C",
-                "value": "2"
+                "value": "A"
             },
             {
                 "kind": "H",
