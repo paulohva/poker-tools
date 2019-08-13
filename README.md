@@ -14,7 +14,7 @@ Current version can evaluate two players cards hand to obtain the winner
 git clone https://github.com/paulohva/poker-tools.git
 ```
 ```sh
-./mvnw sprint:boot:run
+./mvnw spring-boot:run
 ```
 or if you have Maven 3 installed:
 ```sh
