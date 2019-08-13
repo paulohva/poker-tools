@@ -1,8 +1,6 @@
 package com.paulohva.pokertools.services;
 
-import com.paulohva.pokertools.dto.CardDTO;
-import com.paulohva.pokertools.dto.EvaluateHandsRequestDTO;
-import com.paulohva.pokertools.dto.PlayerHandDTO;
+import com.paulohva.pokertools.dto.*;
 import com.paulohva.pokertools.services.exception.InvalidRequestException;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,8 +24,8 @@ public class EvaluateServiceTest {
     public void testVerifyAllCardsValid_CardMissingOrDuplicated() throws Exception{
         //given
         EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
-        request.setPlayerOne(createPlayerAndHeartsCards("John"));
-        request.setPlayerTwo(createPlayerAndHeartsCards("James"));
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createPlayerAndHighCard("James"));
 
         //when
         try {
@@ -53,8 +51,8 @@ public class EvaluateServiceTest {
     public void testVerifyAllCardsValid_InvalidCard() throws Exception{
         //given
         EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
-        request.setPlayerOne(createPlayerAndHeartsCards("John"));
-        request.setPlayerTwo(createPlayerAndSpacesCards("James"));
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
         request.getPlayerTwo().setCards(createInvalidCardsHand());
 
         //when
@@ -67,31 +65,246 @@ public class EvaluateServiceTest {
         }
     }
 
-    private PlayerHandDTO createPlayerAndHeartsCards(String name) {
-        PlayerHandDTO player = new PlayerHandDTO();
-        player.setPlayerName(name);
+    @Test
+    public void testVerifyAllCardsValid_Valid() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
 
-        List<CardDTO> cards = new ArrayList<>();
-        cards.add(new CardDTO("2", 'H'));
-        cards.add(new CardDTO("3", 'H'));
-        cards.add(new CardDTO("4", 'H'));
-        cards.add(new CardDTO("5", 'H'));
-        cards.add(new CardDTO("6", 'H'));
+        //when
+        boolean result = evaluateService.verifyAllCardsValid(request);
 
-        player.setCards(cards.toArray(new CardDTO[0]));
-        return player;
+        //then
+        assertTrue(result);
     }
 
-    private PlayerHandDTO createPlayerAndSpacesCards(String name) {
+    @Test
+    public void testSortPlayersHand_Valid() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+
+        //when
+        evaluateService.sortPlayersHand(request);
+
+        //then
+        assertTrue(true);
+    }
+
+    @Test
+    public void testEvaluateHands_Valid() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+
+        //when
+        evaluateService.evaluateHands(request);
+
+        //then
+        assertTrue(true);
+    }
+
+    @Test
+    public void testEvaluateHands_StraightFlush() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createStraightFlush());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.STRAIGHT_FLUSH);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_Flush() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerTwo().setCards(createFlush());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.FLUSH);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerTwo().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_FullHouse() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createFullHouse());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.FULL_HOUSE);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_StraightFiveHigh() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createStraightFiveHigh());
+        request.getPlayerTwo().setCards(createStraightAceHigh());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.STRAIGHT);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerTwo().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_InvertedStraightFiveHigh() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createStraightAceHigh());
+        request.getPlayerTwo().setCards(createStraightFiveHigh());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.STRAIGHT);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_FourInAKind() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createFourInAKind());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.FOUR_OF_A_KIND);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_OnePair() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createOnePair());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.ONE_PAIR);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_TwoPair() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createTwoPair());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.TWO_PAIR);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_ThreeInAKind() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createThreeInAKind());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.THREE_OF_A_KIND);
+        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+    }
+
+    @Test
+    public void testEvaluateHands_Draw() throws Exception{
+        //given
+        EvaluateHandsRequestDTO request = new EvaluateHandsRequestDTO();
+        request.setPlayerOne(createPlayerAndHighCard("John"));
+        request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
+        request.getPlayerOne().setCards(createStraightAceHigh());
+        request.getPlayerTwo().setCards(createOtherStraightAceHigh());
+
+        //when
+        request = evaluateService.sortPlayersHand(request);
+        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+
+        //then
+        assertEquals(result.getRank(), HandRankEnum.DRAW);
+        assertNull(result.getWinnerPlayer());
+    }
+
+    private PlayerHandDTO createPlayerAndHighCard(String name) {
         PlayerHandDTO player = new PlayerHandDTO();
         player.setPlayerName(name);
 
         List<CardDTO> cards = new ArrayList<>();
         cards.add(new CardDTO("2", 'S'));
-        cards.add(new CardDTO("3", 'S'));
-        cards.add(new CardDTO("4", 'S'));
-        cards.add(new CardDTO("5", 'S'));
+        cards.add(new CardDTO("4", 'C'));
         cards.add(new CardDTO("6", 'S'));
+        cards.add(new CardDTO("8", 'C'));
+        cards.add(new CardDTO("10", 'S'));
+
+        player.setCards(cards.toArray(new CardDTO[0]));
+        return player;
+    }
+
+    private PlayerHandDTO createOtherPlayerAndHighCard(String name) {
+        PlayerHandDTO player = new PlayerHandDTO();
+        player.setPlayerName(name);
+
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("3", 'H'));
+        cards.add(new CardDTO("5", 'D'));
+        cards.add(new CardDTO("7", 'H'));
+        cards.add(new CardDTO("9", 'D'));
+        cards.add(new CardDTO("J", 'H'));
 
         player.setCards(cards.toArray(new CardDTO[0]));
         return player;
@@ -108,11 +321,111 @@ public class EvaluateServiceTest {
 
     private CardDTO[] createInvalidCardsHand() {
         List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("19", 'S'));
+        cards.add(new CardDTO("12", 'S'));
+        cards.add(new CardDTO("17", 'S'));
+        cards.add(new CardDTO("15", 'S'));
+        cards.add(new CardDTO("13", 'S'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createStraightFlush() {
+        List<CardDTO> cards = new ArrayList<>();
         cards.add(new CardDTO("2", 'S'));
         cards.add(new CardDTO("3", 'S'));
         cards.add(new CardDTO("4", 'S'));
         cards.add(new CardDTO("5", 'S'));
-        cards.add(new CardDTO("13", 'S'));
+        cards.add(new CardDTO("6", 'S'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createFlush() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("2", 'S'));
+        cards.add(new CardDTO("4", 'S'));
+        cards.add(new CardDTO("6", 'S'));
+        cards.add(new CardDTO("8", 'S'));
+        cards.add(new CardDTO("10", 'S'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createFullHouse() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("J", 'S'));
+        cards.add(new CardDTO("J", 'H'));
+        cards.add(new CardDTO("Q", 'S'));
+        cards.add(new CardDTO("Q", 'H'));
+        cards.add(new CardDTO("Q", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createStraightFiveHigh() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("2", 'S'));
+        cards.add(new CardDTO("A", 'H'));
+        cards.add(new CardDTO("3", 'S'));
+        cards.add(new CardDTO("4", 'H'));
+        cards.add(new CardDTO("5", 'S'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createStraightAceHigh() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("K", 'D'));
+        cards.add(new CardDTO("A", 'C'));
+        cards.add(new CardDTO("Q", 'D'));
+        cards.add(new CardDTO("J", 'C'));
+        cards.add(new CardDTO("10", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createOtherStraightAceHigh() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("K", 'S'));
+        cards.add(new CardDTO("A", 'H'));
+        cards.add(new CardDTO("Q", 'S'));
+        cards.add(new CardDTO("J", 'H'));
+        cards.add(new CardDTO("10", 'S'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createFourInAKind() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("K", 'D'));
+        cards.add(new CardDTO("K", 'C'));
+        cards.add(new CardDTO("K", 'H'));
+        cards.add(new CardDTO("K", 'S'));
+        cards.add(new CardDTO("10", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createOnePair() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("K", 'D'));
+        cards.add(new CardDTO("K", 'C'));
+        cards.add(new CardDTO("9", 'H'));
+        cards.add(new CardDTO("8", 'S'));
+        cards.add(new CardDTO("10", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createTwoPair() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("K", 'D'));
+        cards.add(new CardDTO("K", 'C'));
+        cards.add(new CardDTO("Q", 'H'));
+        cards.add(new CardDTO("Q", 'S'));
+        cards.add(new CardDTO("10", 'D'));
+        return cards.toArray(new CardDTO[0]);
+    }
+
+    private CardDTO[] createThreeInAKind() {
+        List<CardDTO> cards = new ArrayList<>();
+        cards.add(new CardDTO("K", 'D'));
+        cards.add(new CardDTO("K", 'C'));
+        cards.add(new CardDTO("K", 'H'));
+        cards.add(new CardDTO("9", 'S'));
+        cards.add(new CardDTO("10", 'D'));
         return cards.toArray(new CardDTO[0]);
     }
 }

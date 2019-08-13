@@ -29,7 +29,7 @@ public class GameController {
     public ResponseEntity evaluateHands(@RequestBody @Valid EvaluateHandsRequestDTO evaluateHandsRequestDTO){
         // exception handler catch if anything wrong
         evaluateService.verifyAllCardsValid(evaluateHandsRequestDTO);
-        evaluateHandsRequestDTO = evaluateService.orderAndSortCards(evaluateHandsRequestDTO);
+        evaluateHandsRequestDTO = evaluateService.sortPlayersHand(evaluateHandsRequestDTO);
 
         EvaluateHandsResultDTO handResultDTO = evaluateService.evaluateHands(evaluateHandsRequestDTO);
 

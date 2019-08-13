@@ -51,7 +51,7 @@ public class CardDTO implements Serializable {
         } catch (IndexOutOfBoundsException e) {
             throw new InvalidRequestException(e.getMessage());
         }
-        return rankList.;
+        return rankList.orElse(0);
     }
 
     public boolean isCardValid() {

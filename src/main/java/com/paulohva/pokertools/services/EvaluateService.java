@@ -13,14 +13,14 @@ public interface EvaluateService {
      * @param evaluateHandsRequestDTO
      * @return
      */
-    void verifyAllCardsValid(EvaluateHandsRequestDTO evaluateHandsRequestDTO);
+    boolean verifyAllCardsValid(EvaluateHandsRequestDTO evaluateHandsRequestDTO);
 
     /**
      *
      * @param evaluateHandsRequestDTO
      * @return
      */
-    EvaluateHandsRequestDTO orderAndSortCards(EvaluateHandsRequestDTO evaluateHandsRequestDTO);
+    EvaluateHandsRequestDTO sortPlayersHand(EvaluateHandsRequestDTO evaluateHandsRequestDTO);
 
     /**
      *

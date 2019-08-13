@@ -70,7 +70,7 @@ public class EvaluateServiceImpl implements EvaluateService {
     }
 
     @Override
-    public void verifyAllCardsValid(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+    public boolean verifyAllCardsValid(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
         CardDTO[] playerOneCards = evaluateHandsRequestDTO.getPlayerOne().getCards();
         CardDTO[] playerTwoCards = evaluateHandsRequestDTO.getPlayerTwo().getCards();
 
@@ -87,10 +87,12 @@ public class EvaluateServiceImpl implements EvaluateService {
                 throw new InvalidRequestException(String.format("Invalid card: %s", card));
             }
         }
+
+        return true;
     }
 
     @Override
-    public EvaluateHandsRequestDTO orderAndSortCards(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+    public EvaluateHandsRequestDTO sortPlayersHand(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
         evaluateHandsRequestDTO.getPlayerOne().setCards(sortHand(evaluateHandsRequestDTO.getPlayerOne().getCards()));
         evaluateHandsRequestDTO.getPlayerTwo().setCards(sortHand(evaluateHandsRequestDTO.getPlayerTwo().getCards()));
         return evaluateHandsRequestDTO;
