@@ -6,7 +6,7 @@ An API that provides endpoints for poker games interfaces.
 
 ## Key Features
 
-Current version can evaluate two players cards hand to obtain the winner
+Current version can evaluate two players cards hand to obtain the winner.
 
 ## How to run
 
