@@ -97,7 +97,7 @@ Each card uses the following format:
 
 ## Output format
 
-```
+```json
 {
     "playerName": "Ju",
     "cards": [
