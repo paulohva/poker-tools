@@ -40,7 +40,6 @@ public class GameController {
         if (result.getHighRank().equals(HandRankEnum.DRAW)) {
             result = evaluateService.tryResolveDraw(request);
         }
-
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

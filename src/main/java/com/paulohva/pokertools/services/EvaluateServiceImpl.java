@@ -13,9 +13,9 @@ import java.util.stream.Stream;
 public class EvaluateServiceImpl implements EvaluateService {
 
     @Override
-    public boolean verifyAllCardsValid(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
-        CardDTO[] playerOneCards = evaluateHandsRequestDTO.getPlayerOne().getCards();
-        CardDTO[] playerTwoCards = evaluateHandsRequestDTO.getPlayerTwo().getCards();
+    public boolean verifyAllCardsValid(EvaluateHandsRequestDTO request) {
+        CardDTO[] playerOneCards = request.getPlayerOne().getCards();
+        CardDTO[] playerTwoCards = request.getPlayerTwo().getCards();
 
         // all cards concatenation with distinct. CardDTO equals method uses 'kind' and 'value' properties.
         CardDTO[] allCardsDistinct = Stream.concat(Arrays.stream(playerOneCards), Arrays.stream(playerTwoCards)).distinct().toArray(CardDTO[]::new);
@@ -24,21 +24,22 @@ public class EvaluateServiceImpl implements EvaluateService {
         if (allCardsDistinct.length != (PokerGameUtils.NUMBER_OF_CARDS_IN_HAND * 2)) {
             throw new InvalidRequestException("Card missing or duplicated");
         }
-
         for (CardDTO card : allCardsDistinct) {
+            // isCardValid verify all cards using the enumerator constant called: PokerGameUtils.CARD_VALUE_TO_RANK
             if (!card.isCardValid()) {
                 throw new InvalidRequestException(String.format("Invalid card: %s", card));
             }
         }
-
         return true;
     }
 
     @Override
-    public EvaluateHandsRequestDTO sortPlayersHand(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
-        evaluateHandsRequestDTO.getPlayerOne().setCards(sortHand(evaluateHandsRequestDTO.getPlayerOne().getCards()));
-        evaluateHandsRequestDTO.getPlayerTwo().setCards(sortHand(evaluateHandsRequestDTO.getPlayerTwo().getCards()));
-        return evaluateHandsRequestDTO;
+    public EvaluateHandsRequestDTO sortPlayersHand(EvaluateHandsRequestDTO request) {
+
+        // update the cards order through the sortHand method
+        request.getPlayerOne().setCards(sortHand(request.getPlayerOne().getCards()));
+        request.getPlayerTwo().setCards(sortHand(request.getPlayerTwo().getCards()));
+        return request;
     }
 
     @Override
@@ -49,6 +50,7 @@ public class EvaluateServiceImpl implements EvaluateService {
         HandRankEnum playerOneHandRank = getHandRank(playerOneCards);
         HandRankEnum playerTwoHandRank = getHandRank(playerTwoCards);
 
+        // store the hand rank result in a transient property to be used to check who wins
         request.getPlayerOne().setHandRank(playerOneHandRank);
         request.getPlayerTwo().setHandRank(playerTwoHandRank);
 
@@ -57,50 +59,46 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     @Override
     public EvaluateHandsResultDTO getWinningHandRank(EvaluateHandsRequestDTO request) {
-        EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
 
+        PlayerHandDTO playerOne = request.getPlayerOne();
+        PlayerHandDTO playerTwo = request.getPlayerTwo();
 
-        if (request.getPlayerOne().getHandRank().getRank() < request.getPlayerTwo().getHandRank().getRank()) {
-            //todo method to set winner
-            result.setPlayerName(request.getPlayerOne().getPlayerName());
-            result.setHighRank(request.getPlayerOne().getHandRank());
-            return result;
+        // verify who wins.
+        // as poker rules described in: https://en.wikipedia.org/wiki/List_of_poker_hands, less rank number is better
+        if (playerOne.getHandRank().getRank() < request.getPlayerTwo().getHandRank().getRank()) {
+            return createResultEvaluateHands(playerOne.getHandRank(), playerOne.getPlayerName());
         }
-        if (request.getPlayerOne().getHandRank().getRank() > request.getPlayerTwo().getHandRank().getRank()) {
-            result.setPlayerName(request.getPlayerTwo().getPlayerName());
-            result.setHighRank(request.getPlayerTwo().getHandRank());
-            return result;
+        if (playerOne.getHandRank().getRank() > request.getPlayerTwo().getHandRank().getRank()) {
+            return createResultEvaluateHands(playerTwo.getHandRank(), playerTwo.getPlayerName());
         }
-
-        result.setHighRank(HandRankEnum.DRAW);
-        return result;
+        return createDrawResultEvaluateHands();
     }
+
+
 
     @Override
     public EvaluateHandsResultDTO tryResolveDraw(EvaluateHandsRequestDTO request) {
-        EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
+        PlayerHandDTO playerOne = request.getPlayerOne();
+        PlayerHandDTO playerTwo = request.getPlayerTwo();
 
-        CardDTO[] playerOneCards = request.getPlayerOne().getCards();
-        CardDTO[] playerTwoCards = request.getPlayerTwo().getCards();
+        CardDTO[] playerOneCards = playerOne.getCards();
+        CardDTO[] playerTwoCards = playerTwo.getCards();
 
-        fixAceToFiveStraight(playerOneCards, request.getPlayerOne().getHandRank());
-        fixAceToFiveStraight(playerTwoCards, request.getPlayerTwo().getHandRank());
+        // fix the ace card rank for ace-low in straights
+        fixAceToFiveStraight(playerOneCards, playerOne.getHandRank());
+        fixAceToFiveStraight(playerTwoCards, playerTwo.getHandRank());
 
+        // assuming all cards sorted (even by group strengths like pairs and three in kind) verify who wins
+        // as poker rules described in: https://en.wikipedia.org/wiki/List_of_poker_hands, less rank number is better
         for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
             if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
-                result.setPlayerName(request.getPlayerOne().getPlayerName());
-                result.setHighRank(request.getPlayerOne().getHandRank());
-                return result;
+                return createResultEvaluateHands(playerOne.getHandRank(), playerOne.getPlayerName());
             }
             if (playerOneCards[index].getRank() < playerTwoCards[index].getRank()) {
-                result.setPlayerName(request.getPlayerTwo().getPlayerName());
-                result.setHighRank(request.getPlayerTwo().getHandRank());
-                return result;
+                return createResultEvaluateHands(playerTwo.getHandRank(), playerTwo.getPlayerName());
             }
         }
-
-        result.setHighRank(HandRankEnum.DRAW);
-        return result;
+        return createDrawResultEvaluateHands();
     }
 
     private void fixAceToFiveStraight(CardDTO[] cards, HandRankEnum handRank) {
@@ -185,5 +183,18 @@ public class EvaluateServiceImpl implements EvaluateService {
             }
         }
         return true;
+    }
+
+    private EvaluateHandsResultDTO createResultEvaluateHands(HandRankEnum handRankEnum, String playerName) {
+        EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
+        result.setPlayerName(playerName);
+        result.setHighRank(handRankEnum);
+        return result;
+    }
+
+    private EvaluateHandsResultDTO createDrawResultEvaluateHands() {
+        EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
+        result.setHighRank(HandRankEnum.DRAW);
+        return result;
     }
 }
