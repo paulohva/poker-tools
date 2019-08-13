@@ -20,8 +20,12 @@ or if you have Maven 3 installed:
 ```sh
 ./mvnw sprint:boot:run
 ```
+Endpoint that allows POST requests:
+```http
+http://localhost:8080/api/game/evaluatehands
+```
 * Use a tool that can create HTTP requests, like Postman (https://www.getpostman.com/)
-* Define a JSON like the example above:
+* Create a POST request putting a JSON as Body, like the example bellow:
 ```json
 {
     "playerOne": {
