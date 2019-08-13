@@ -102,5 +102,9 @@ Each card uses the following format:
 * "playerName": the winner's name
 * "highRank": name of category that wins
 
+## Run JUnit tests
 
-
+There is a suit of JUnit tests that can be runned for the algorithms on service layer.
+```sh
+./mvnw test
+```
