@@ -1,5 +1,6 @@
 package com.paulohva.pokertools.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.paulohva.pokertools.services.exception.InvalidRequestException;
 import com.paulohva.pokertools.utils.PokerGameUtils;
 
@@ -46,6 +47,7 @@ public class CardDTO implements Serializable {
      *
      * @return Integer with the card value rank
      */
+    @JsonIgnore
     public int getRank() {
         Optional<Integer> rankList;
         try {
@@ -58,7 +60,7 @@ public class CardDTO implements Serializable {
         }
         return rankList.orElse(0);
     }
-
+    @JsonIgnore
     public boolean isCardValid() {
         boolean isKindValid = PokerGameUtils.CARD_KIND_SET.stream().anyMatch(i -> i == this.kind);
         if (getRank() == 0 || !isKindValid) {

@@ -66,10 +66,10 @@ public class EvaluateServiceImpl implements EvaluateService {
         // verify who wins.
         // as poker rules described in: https://en.wikipedia.org/wiki/List_of_poker_hands, less rank number is better
         if (playerOne.getHandRank().getRank() < request.getPlayerTwo().getHandRank().getRank()) {
-            return createResultEvaluateHands(playerOne.getHandRank(), playerOne.getPlayerName());
+            return createResultEvaluateHands(playerOne.getHandRank(), playerOne.getPlayerName(), playerOne.getCards());
         }
         if (playerOne.getHandRank().getRank() > request.getPlayerTwo().getHandRank().getRank()) {
-            return createResultEvaluateHands(playerTwo.getHandRank(), playerTwo.getPlayerName());
+            return createResultEvaluateHands(playerTwo.getHandRank(), playerTwo.getPlayerName(), playerTwo.getCards());
         }
         return createDrawResultEvaluateHands();
     }
@@ -92,10 +92,10 @@ public class EvaluateServiceImpl implements EvaluateService {
         // as poker rules described in: https://en.wikipedia.org/wiki/List_of_poker_hands, less rank number is better
         for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
             if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
-                return createResultEvaluateHands(playerOne.getHandRank(), playerOne.getPlayerName());
+                return createResultEvaluateHands(playerOne.getHandRank(), playerOne.getPlayerName(), playerOneCards);
             }
             if (playerOneCards[index].getRank() < playerTwoCards[index].getRank()) {
-                return createResultEvaluateHands(playerTwo.getHandRank(), playerTwo.getPlayerName());
+                return createResultEvaluateHands(playerTwo.getHandRank(), playerTwo.getPlayerName(), playerTwoCards);
             }
         }
         return createDrawResultEvaluateHands();
@@ -185,10 +185,11 @@ public class EvaluateServiceImpl implements EvaluateService {
         return true;
     }
 
-    private EvaluateHandsResultDTO createResultEvaluateHands(HandRankEnum handRankEnum, String playerName) {
+    private EvaluateHandsResultDTO createResultEvaluateHands(HandRankEnum handRankEnum, String playerName, CardDTO[] cards) {
         EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
         result.setPlayerName(playerName);
         result.setHighRank(handRankEnum);
+        result.setCards(cards);
         return result;
     }
 
