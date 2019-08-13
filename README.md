@@ -99,12 +99,35 @@ Each card uses the following format:
 
 ```
 {
-    "playerName": "Paulo",
-    "highRank": "STRAIGHT"
+    "playerName": "Ju",
+    "cards": [
+        {
+            "value": "A",
+            "kind": "H"
+        },
+        {
+            "value": "A",
+            "kind": "C"
+        },
+        {
+            "value": "5",
+            "kind": "H"
+        },
+        {
+            "value": "4",
+            "kind": "C"
+        },
+        {
+            "value": "3",
+            "kind": "H"
+        }
+    ],
+    "highRank": "ONE_PAIR"
 }
 ```
 * "playerName": the winner's name
-* "highRank": name of category that wins
+* "cards": highest hand
+* "highRank": category of the highest hand
 
 ## Run JUnit tests
 
