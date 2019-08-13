@@ -34,29 +34,47 @@ public class EvaluateServiceImpl implements EvaluateService {
     }
 
     @Override
-    public EvaluateHandsResultDTO tryResolveDraw(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+    public EvaluateHandsResultDTO tryResolveDraw(EvaluateHandsRequestDTO request) {
         EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
 
-        CardDTO[] playerOneCards = evaluateHandsRequestDTO.getPlayerOne().getCards();
-        CardDTO[] playerTwoCards = evaluateHandsRequestDTO.getPlayerTwo().getCards();
+        CardDTO[] playerOneCards = request.getPlayerOne().getCards();
+        CardDTO[] playerTwoCards = request.getPlayerTwo().getCards();
 
-        fixAceToFiveStraight(playerOneCards, evaluateHandsRequestDTO.getPlayerOne().getHandRank());
-        fixAceToFiveStraight(playerTwoCards, evaluateHandsRequestDTO.getPlayerTwo().getHandRank());
+        fixAceToFiveStraight(playerOneCards, request.getPlayerOne().getHandRank());
+        fixAceToFiveStraight(playerTwoCards, request.getPlayerTwo().getHandRank());
 
         // deal with draw
         // high card situation (extract method)
-        for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
-            if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
-                result.setPlayerName(evaluateHandsRequestDTO.getPlayerOne().getPlayerName());
-                result.setHighRank(evaluateHandsRequestDTO.getPlayerOne().getHandRank());
-                return result;
-            }
-            if (playerOneCards[index].getRank() < playerTwoCards[index].getRank()) {
-                result.setPlayerName(evaluateHandsRequestDTO.getPlayerTwo().getPlayerName());
-                result.setHighRank(evaluateHandsRequestDTO.getPlayerTwo().getHandRank());
-                return result;
+        if (request.getPlayerOne().getHandRank().equals(HandRankEnum.STRAIGHT)
+                || request.getPlayerOne().getHandRank().equals(HandRankEnum.STRAIGHT_FLUSH)
+                || request.getPlayerOne().getHandRank().equals(HandRankEnum.HIGH_CARD)
+                || request.getPlayerOne().getHandRank().equals(HandRankEnum.FLUSH)) {
+            for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
+                if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
+                    result.setPlayerName(request.getPlayerOne().getPlayerName());
+                    result.setHighRank(request.getPlayerOne().getHandRank());
+                    return result;
+                }
+                if (playerOneCards[index].getRank() < playerTwoCards[index].getRank()) {
+                    result.setPlayerName(request.getPlayerTwo().getPlayerName());
+                    result.setHighRank(request.getPlayerTwo().getHandRank());
+                    return result;
+                }
             }
         }
+
+
+        //TODO: tratar os grupos, grupo com mais cartas tem vantagem no desempate
+        //four > tree > two pairs > one pair
+        // no caso do two pair, separar e tratar o que tem a maior carta priemiro
+
+        // group by card rank
+        //Map<Integer, Long> playerOneCardsGroupByRank = Arrays.stream(playerOneCards).collect(Collectors.groupingBy(CardDTO::getRank, Collectors.counting()));
+        //Map<Integer, Long> playerTwoCardsGroupByRank = Arrays.stream(playerOneCards).collect(Collectors.groupingBy(Collectors.counting(CardDTO::getRank)));
+
+
+
+
         result.setHighRank(HandRankEnum.DRAW);
         return result;
     }
@@ -105,9 +123,9 @@ public class EvaluateServiceImpl implements EvaluateService {
     }
 
     private void fixAceToFiveStraight(CardDTO[] cards, HandRankEnum handRank) {
-        if(handRank.equals(HandRankEnum.STRAIGHT) || handRank.equals(HandRankEnum.STRAIGHT_FLUSH)) {
+        if (handRank.equals(HandRankEnum.STRAIGHT) || handRank.equals(HandRankEnum.STRAIGHT_FLUSH)) {
             // trick to deal with five-high straight
-            if(cards[0].getRank() == 14 && cards[1].getRank() == 5) {
+            if (cards[0].getRank() == 14 && cards[1].getRank() == 5) {
                 CardDTO auxCard = cards[0];
                 System.arraycopy(cards, 1, cards, 0, 4);
                 cards[4] = auxCard;
@@ -116,7 +134,22 @@ public class EvaluateServiceImpl implements EvaluateService {
     }
 
     private CardDTO[] sortHand(CardDTO[] cards) {
-        CardDTO[] sortedCards = Arrays.stream(cards).sorted(Comparator.comparing(i -> i.getRank(),Comparator.reverseOrder())).distinct().toArray(CardDTO[]::new);
+        CardDTO[] sortedCards = Arrays.stream(cards).sorted(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder())).distinct().toArray(CardDTO[]::new);
+
+        // group by card rank to order repeated ranks
+        // todo arruamr nomes das variaveis
+        Map<Integer, List<CardDTO>> collect = Arrays.stream(sortedCards).sorted(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder())).collect(Collectors.groupingBy(CardDTO::getRank));
+
+        if (collect.size() < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND) {
+            List<CardDTO> newSort = new ArrayList<>();
+            for (int index = 4; index > 0; index--) {
+                int finalIndex = index;
+                List<CardDTO> temp = collect.values().stream().filter(i -> i.size() == finalIndex).flatMap(List::stream).collect(Collectors.toList());
+                newSort.addAll(temp);
+            }
+            sortedCards = newSort.toArray(sortedCards);
+        }
+
         return sortedCards;
     }
 
@@ -165,17 +198,17 @@ public class EvaluateServiceImpl implements EvaluateService {
 
     private boolean isHandCardsRankConsecutive(CardDTO[] cards) {
         // algorithm to check of a ordered array of cards is consecutive, including ace a low card into a straight
-        for(int index = 0; index < cards.length; index++) {
-            if(index == cards.length - 1) {
+        for (int index = 0; index < cards.length; index++) {
+            if (index == cards.length - 1) {
                 continue;
             }
 
             // trick to consider ace as part of a straight five-high
-            if(index == 0 && cards[index].getRank() == 14 && cards[index + 1].getRank() == 5) {
+            if (index == 0 && cards[index].getRank() == 14 && cards[index + 1].getRank() == 5) {
                 continue;
             }
 
-            if(cards[index].getRank() - cards[index + 1].getRank() != 1) {
+            if (cards[index].getRank() - cards[index + 1].getRank() != 1) {
                 return false;
             }
         }
