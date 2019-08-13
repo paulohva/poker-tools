@@ -24,8 +24,10 @@ Endpoint that allows POST requests:
 ```http
 http://localhost:8080/api/game/evaluatehands
 ```
+
 * Use a tool that can create HTTP requests, like Postman (https://www.getpostman.com/)
 * Create a POST request putting a JSON as Body, like the example bellow:
+
 ```json
 {
     "playerOne": {
@@ -125,6 +127,7 @@ Each card uses the following format:
     "highRank": "ONE_PAIR"
 }
 ```
+
 * "playerName": the winner's name
 * "cards": highest hand
 * "highRank": category of the highest hand
@@ -132,6 +135,7 @@ Each card uses the following format:
 ## Run JUnit tests
 
 There is a suit of JUnit tests that can be runned for the algorithms on service layer.
+
 ```sh
 ./mvnw test
 ```
