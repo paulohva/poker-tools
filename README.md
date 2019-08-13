@@ -80,16 +80,16 @@ or if you have Maven 3 installed:
 
 Each card uses the following format:
 * "kind":
-..* "H" for Hearts
-..* "C" for Clubs
-..* "D" for Diamonds
-..* "S" for Spades
+  * "H" for Hearts
+  * "C" for Clubs
+  * "D" for Diamonds
+  * "S" for Spades
 * "value":
-..* from 1 to 10, just the number
-..* "J" for Jack
-..* "Q" for Queen
-..* "K" for King
-..* "A" for Ace
+  * from 1 to 10, just the number
+  * "J" for Jack
+  * "Q" for Queen
+  * "K" for King
+  * "A" for Ace
 
 ## Output format
 
