@@ -8,8 +8,6 @@ An API that provides endpoints for poker games
 
 Current version can evaluate two players card hand to obtain the winner
 
----
-
 ## How to run
 
 ```sh
@@ -22,7 +20,6 @@ or if you have Maven 3 installed:
 ```sh
 ./mvnw sprint:boot:run
 ```
-
 * Use a tool that can create HTTP requests, like Postman (https://www.getpostman.com/)
 * Define a JSON like the example above:
 ```json
@@ -36,19 +33,19 @@ or if you have Maven 3 installed:
             },
             {
                 "kind": "S",
-                "value": 2
+                "value": "2"
             },
             {
                 "kind": "D",
-                "value": 3
+                "value": "3"
             },
             {
                 "kind": "S",
-                "value": 5
+                "value": "5"
             },
             {
                 "kind": "D",
-                "value": 6
+                "value": "6"
             }
         ]
     },
@@ -61,23 +58,49 @@ or if you have Maven 3 installed:
             },
             {
                 "kind": "C",
-                "value": 2
+                "value": "2"
             },
             {
                 "kind": "H",
-                "value": 3
+                "value": "3"
             },
             {
                 "kind": "C",
-                "value": 4
+                "value": "4"
             },
             {
                 "kind": "H",
-                "value": 5
+                "value": "5"
             }
         ]
     }
 }
+```
+## JSON Format
+
+Each card uses the following format:
+* "kind":
+** "H" for Hearts
+** "C" for Clubs
+** "D" for Diamonds
+** "S" for Spades
+* "value":
+** from 1 to 10, just the number
+** "J" for Jack
+** "Q" for Queen
+** "K" for King
+** "A" for Ace
+
+## Output format
+
+```
+{
+    "playerName": "Paulo",
+    "highRank": "STRAIGHT"
+}
+```
+* "playerName": the winner's name
+* "highRank": name of category that wins
 
 
 
