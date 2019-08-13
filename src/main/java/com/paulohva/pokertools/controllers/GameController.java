@@ -3,6 +3,7 @@ package com.paulohva.pokertools.controllers;
 
 import com.paulohva.pokertools.dto.EvaluateHandsResultDTO;
 import com.paulohva.pokertools.dto.EvaluateHandsRequestDTO;
+import com.paulohva.pokertools.dto.HandRankEnum;
 import com.paulohva.pokertools.services.EvaluateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,13 +27,18 @@ public class GameController {
     }
 
     @PostMapping(path = "/evaluatehands")
-    public ResponseEntity evaluateHands(@RequestBody @Valid EvaluateHandsRequestDTO evaluateHandsRequestDTO){
+    public ResponseEntity evaluateHands(@RequestBody @Valid EvaluateHandsRequestDTO request){
         // exception handler catch if anything wrong
-        evaluateService.verifyAllCardsValid(evaluateHandsRequestDTO);
-        evaluateHandsRequestDTO = evaluateService.sortPlayersHand(evaluateHandsRequestDTO);
+        evaluateService.verifyAllCardsValid(request);
+        request = evaluateService.sortPlayersHand(request);
+        request = evaluateService.getHandRanks(request);
 
-        EvaluateHandsResultDTO handResultDTO = evaluateService.evaluateHands(evaluateHandsRequestDTO);
+        EvaluateHandsResultDTO result = evaluateService.getWinningHandRank(request);
 
-        return new ResponseEntity<>(handResultDTO, HttpStatus.OK);
+        if(result.getHighRank().equals(HandRankEnum.DRAW)) {
+            result = evaluateService.tryResolveDraw(request);
+        }
+
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 }

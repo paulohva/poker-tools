@@ -4,30 +4,30 @@ import java.io.Serializable;
 import java.util.List;
 
 public class EvaluateHandsResultDTO implements Serializable {
-    private PlayerHandDTO winnerPlayer;
-    private HandRankEnum rank;
+    private String playerName;
+    private HandRankEnum highRank;
 
     public EvaluateHandsResultDTO() {
     }
 
-    public EvaluateHandsResultDTO(PlayerHandDTO winnerPlayer, HandRankEnum rank) {
-        this.winnerPlayer = winnerPlayer;
-        this.rank = rank;
+    public EvaluateHandsResultDTO(String playerName, HandRankEnum highRank) {
+        this.playerName = playerName;
+        this.highRank = highRank;
     }
 
-    public PlayerHandDTO getWinnerPlayer() {
-        return winnerPlayer;
+    public String getPlayerName() {
+        return playerName;
     }
 
-    public void setWinnerPlayer(PlayerHandDTO winnerPlayer) {
-        this.winnerPlayer = winnerPlayer;
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
     }
 
-    public HandRankEnum getRank() {
-        return rank;
+    public HandRankEnum getHighRank() {
+        return highRank;
     }
 
-    public void setRank(HandRankEnum rank) {
-        this.rank = rank;
+    public void setHighRank(HandRankEnum highRank) {
+        this.highRank = highRank;
     }
 }

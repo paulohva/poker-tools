@@ -100,8 +100,11 @@ public class EvaluateServiceTest {
         request.setPlayerOne(createPlayerAndHighCard("John"));
         request.setPlayerTwo(createOtherPlayerAndHighCard("James"));
 
+
         //when
-        evaluateService.evaluateHands(request);
+        request = evaluateService.sortPlayersHand(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
         assertTrue(true);
@@ -117,11 +120,12 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.STRAIGHT_FLUSH);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.STRAIGHT_FLUSH);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
     }
 
     @Test
@@ -134,11 +138,12 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.FLUSH);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerTwo().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.FLUSH);
+        assertEquals(result.getPlayerName(), request.getPlayerTwo().getPlayerName());
     }
 
     @Test
@@ -151,11 +156,12 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.FULL_HOUSE);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.FULL_HOUSE);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
     }
 
     @Test
@@ -169,11 +175,14 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result = evaluateService.getWinningHandRank(request);
+        assertEquals(result.getHighRank(), HandRankEnum.DRAW);
+        result = evaluateService.tryResolveDraw(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.STRAIGHT);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerTwo().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.STRAIGHT);
+        assertEquals(result.getPlayerName(), request.getPlayerTwo().getPlayerName());
     }
 
     @Test
@@ -187,11 +196,14 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
+        assertEquals(result.getHighRank(),HandRankEnum.DRAW);
+        result = evaluateService.tryResolveDraw(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.STRAIGHT);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.STRAIGHT);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
     }
 
     @Test
@@ -204,11 +216,12 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.FOUR_OF_A_KIND);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.FOUR_OF_A_KIND);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
     }
 
     @Test
@@ -221,11 +234,12 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.ONE_PAIR);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.ONE_PAIR);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
     }
 
     @Test
@@ -238,11 +252,12 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.TWO_PAIR);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.TWO_PAIR);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
     }
 
     @Test
@@ -255,11 +270,12 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.THREE_OF_A_KIND);
-        assertEquals(result.getWinnerPlayer().getPlayerName(), request.getPlayerOne().getPlayerName());
+        assertEquals(result.getHighRank(), HandRankEnum.THREE_OF_A_KIND);
+        assertEquals(result.getPlayerName(), request.getPlayerOne().getPlayerName());
     }
 
     @Test
@@ -273,11 +289,12 @@ public class EvaluateServiceTest {
 
         //when
         request = evaluateService.sortPlayersHand(request);
-        EvaluateHandsResultDTO result = evaluateService.evaluateHands(request);
+        request = evaluateService.getHandRanks(request);
+        EvaluateHandsResultDTO result =evaluateService.getWinningHandRank(request);
 
         //then
-        assertEquals(result.getRank(), HandRankEnum.DRAW);
-        assertNull(result.getWinnerPlayer());
+        assertEquals(result.getHighRank(), HandRankEnum.DRAW);
+        assertNull(result.getPlayerName());
     }
 
     private PlayerHandDTO createPlayerAndHighCard(String name) {

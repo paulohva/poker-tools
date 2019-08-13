@@ -11,6 +11,8 @@ public class PlayerHandDTO implements Serializable {
     @NotNull
     private CardDTO[] cards;
 
+    private HandRankEnum handRank;
+
     public PlayerHandDTO(String playerName, CardDTO[] cards) {
         this.playerName = playerName;
         this.cards = cards;
@@ -35,6 +37,11 @@ public class PlayerHandDTO implements Serializable {
         this.cards = cards;
     }
 
+    public HandRankEnum getHandRank() {
+        return handRank;
+    }
 
-
+    public void setHandRank(HandRankEnum handRank) {
+        this.handRank = handRank;
+    }
 }

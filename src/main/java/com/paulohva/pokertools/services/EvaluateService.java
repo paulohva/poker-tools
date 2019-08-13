@@ -27,6 +27,20 @@ public interface EvaluateService {
      * @param evaluateHandsRequestDTO
      * @return
      */
-    EvaluateHandsResultDTO evaluateHands(EvaluateHandsRequestDTO evaluateHandsRequestDTO);
+    EvaluateHandsResultDTO tryResolveDraw(EvaluateHandsRequestDTO evaluateHandsRequestDTO);
+
+    /**
+     *
+     * @param request
+     * @return
+     */
+    EvaluateHandsRequestDTO getHandRanks(EvaluateHandsRequestDTO request);
+
+    /**
+     *
+     * @param request
+     * @return
+     */
+    EvaluateHandsResultDTO getWinningHandRank(EvaluateHandsRequestDTO request);
 
 }

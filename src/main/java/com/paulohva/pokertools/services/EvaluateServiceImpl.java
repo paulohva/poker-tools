@@ -11,62 +11,68 @@ import java.util.stream.Stream;
 
 @Service
 public class EvaluateServiceImpl implements EvaluateService {
+
     @Override
-    public EvaluateHandsResultDTO evaluateHands(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
-        EvaluateHandsResultDTO handResultDTO = new EvaluateHandsResultDTO();
+    public EvaluateHandsResultDTO getWinningHandRank(EvaluateHandsRequestDTO request) {
+        EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
+        // less is better;
+        // TODO: expain this rule
+        if (request.getPlayerOne().getHandRank().getRank() < request.getPlayerTwo().getHandRank().getRank()) {
+            //todo method to set winner
+            result.setPlayerName(request.getPlayerOne().getPlayerName());
+            result.setHighRank(request.getPlayerOne().getHandRank());
+            return result;
+        }
+        if (request.getPlayerOne().getHandRank().getRank() > request.getPlayerTwo().getHandRank().getRank()) {
+            result.setPlayerName(request.getPlayerTwo().getPlayerName());
+            result.setHighRank(request.getPlayerTwo().getHandRank());
+            return result;
+        }
+
+        result.setHighRank(HandRankEnum.DRAW);
+        return result;
+    }
+
+    @Override
+    public EvaluateHandsResultDTO tryResolveDraw(EvaluateHandsRequestDTO evaluateHandsRequestDTO) {
+        EvaluateHandsResultDTO result = new EvaluateHandsResultDTO();
 
         CardDTO[] playerOneCards = evaluateHandsRequestDTO.getPlayerOne().getCards();
         CardDTO[] playerTwoCards = evaluateHandsRequestDTO.getPlayerTwo().getCards();
 
-        HandRankEnum playerOneHandRank = getHandRank(playerOneCards);
-        fixAceToFiveStraight(playerOneCards, playerOneHandRank);
-
-        HandRankEnum playerTwoHandRank = getHandRank(playerTwoCards);
-        fixAceToFiveStraight(playerTwoCards, playerTwoHandRank);
-
-        // less is better;
-        // TODO: expain this rule
-        if (playerOneHandRank.getRank() < playerTwoHandRank.getRank()) {
-            //todo method to set winner
-            handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerOne());
-            handResultDTO.setRank(playerOneHandRank);
-            return handResultDTO;
-        }
-        if (playerOneHandRank.getRank() > playerTwoHandRank.getRank()) {
-            handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerTwo());
-            handResultDTO.setRank(playerTwoHandRank);
-            return handResultDTO;
-        }
+        fixAceToFiveStraight(playerOneCards, evaluateHandsRequestDTO.getPlayerOne().getHandRank());
+        fixAceToFiveStraight(playerTwoCards, evaluateHandsRequestDTO.getPlayerTwo().getHandRank());
 
         // deal with draw
         // high card situation (extract method)
         for (int index = 0; index < PokerGameUtils.NUMBER_OF_CARDS_IN_HAND; index++) {
             if (playerOneCards[index].getRank() > playerTwoCards[index].getRank()) {
-                handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerOne());
-                handResultDTO.setRank(playerOneHandRank);
-                return handResultDTO;
+                result.setPlayerName(evaluateHandsRequestDTO.getPlayerOne().getPlayerName());
+                result.setHighRank(evaluateHandsRequestDTO.getPlayerOne().getHandRank());
+                return result;
             }
             if (playerOneCards[index].getRank() < playerTwoCards[index].getRank()) {
-                handResultDTO.setWinnerPlayer(evaluateHandsRequestDTO.getPlayerTwo());
-                handResultDTO.setRank(playerTwoHandRank);
-                return handResultDTO;
+                result.setPlayerName(evaluateHandsRequestDTO.getPlayerTwo().getPlayerName());
+                result.setHighRank(evaluateHandsRequestDTO.getPlayerTwo().getHandRank());
+                return result;
             }
         }
-
-        //TODO pensar no draw / fazer um metodo pra isso
-        handResultDTO.setRank(HandRankEnum.DRAW);
-        return handResultDTO;
+        result.setHighRank(HandRankEnum.DRAW);
+        return result;
     }
 
-    private void fixAceToFiveStraight(CardDTO[] cards, HandRankEnum handRank) {
-        if(handRank.equals(HandRankEnum.STRAIGHT) || handRank.equals(HandRankEnum.STRAIGHT_FLUSH)) {
-            // trick to deal with five-high straight
-            if(cards[0].getRank() == 14 && cards[1].getRank() == 5) {
-                CardDTO auxCard = cards[0];
-                System.arraycopy(cards, 1, cards, 0, 4);
-                cards[4] = auxCard;
-            }
-        }
+    @Override
+    public EvaluateHandsRequestDTO getHandRanks(EvaluateHandsRequestDTO request) {
+        CardDTO[] playerOneCards = request.getPlayerOne().getCards();
+        CardDTO[] playerTwoCards = request.getPlayerTwo().getCards();
+
+        HandRankEnum playerOneHandRank = getHandRank(playerOneCards);
+        HandRankEnum playerTwoHandRank = getHandRank(playerTwoCards);
+
+        request.getPlayerOne().setHandRank(playerOneHandRank);
+        request.getPlayerTwo().setHandRank(playerTwoHandRank);
+
+        return request;
     }
 
     @Override
@@ -96,6 +102,17 @@ public class EvaluateServiceImpl implements EvaluateService {
         evaluateHandsRequestDTO.getPlayerOne().setCards(sortHand(evaluateHandsRequestDTO.getPlayerOne().getCards()));
         evaluateHandsRequestDTO.getPlayerTwo().setCards(sortHand(evaluateHandsRequestDTO.getPlayerTwo().getCards()));
         return evaluateHandsRequestDTO;
+    }
+
+    private void fixAceToFiveStraight(CardDTO[] cards, HandRankEnum handRank) {
+        if(handRank.equals(HandRankEnum.STRAIGHT) || handRank.equals(HandRankEnum.STRAIGHT_FLUSH)) {
+            // trick to deal with five-high straight
+            if(cards[0].getRank() == 14 && cards[1].getRank() == 5) {
+                CardDTO auxCard = cards[0];
+                System.arraycopy(cards, 1, cards, 0, 4);
+                cards[4] = auxCard;
+            }
+        }
     }
 
     private CardDTO[] sortHand(CardDTO[] cards) {
