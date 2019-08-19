@@ -23,7 +23,7 @@ git clone https://github.com/paulohva/poker-tools.git
 ```
 or if you have Maven 3 installed:
 ```sh
-./mvnw sprint:boot:run
+./mvn sprint:boot:run
 ```
 Endpoint that allows POST requests:
 ```http
