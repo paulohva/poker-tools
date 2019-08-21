@@ -4,13 +4,17 @@ import com.paulohva.pokertools.dto.*;
 import com.paulohva.pokertools.services.exception.InvalidRequestException;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
 import static junit.framework.TestCase.*;
 
+@RunWith(SpringRunner.class)
+@SpringBootTest
 public class EvaluateServiceTest {
 
     private EvaluateService evaluateService;

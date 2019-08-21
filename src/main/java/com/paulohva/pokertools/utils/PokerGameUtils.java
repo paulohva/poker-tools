@@ -1,9 +1,6 @@
 package com.paulohva.pokertools.utils;
 
-import com.paulohva.pokertools.dto.CardDTO;
-
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Constants from a poker game:

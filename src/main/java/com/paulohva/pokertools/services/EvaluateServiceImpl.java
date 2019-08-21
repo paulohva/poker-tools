@@ -120,10 +120,10 @@ public class EvaluateServiceImpl implements EvaluateService {
         // TODO: improve this algorithm
         List<CardDTO> cardsSorted = new ArrayList<>();
         for (int index = 4; index > 0; index--) {
-            int finalIndex = index;
-            List<CardDTO> temp = cardsGroupByRank.values().stream().filter(i -> i.size() == finalIndex).flatMap(List::stream).collect(Collectors.toList());
-            temp.sort(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder()));
-            cardsSorted.addAll(temp);
+            int indexValue = index;
+            List<CardDTO> cardsFilteredByGroupSize = cardsGroupByRank.values().stream().filter(i -> i.size() == indexValue).flatMap(List::stream).collect(Collectors.toList());
+            cardsFilteredByGroupSize.sort(Comparator.comparing(i -> i.getRank(), Comparator.reverseOrder()));
+            cardsSorted.addAll(cardsFilteredByGroupSize);
         }
         return cardsSorted.toArray(new CardDTO[0]);
     }
