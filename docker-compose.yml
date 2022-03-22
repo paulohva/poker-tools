@@ -1,0 +1,9 @@
+version: '3'
+services:
+  poker-tools:
+    build: .
+    stdin_open: true
+    tty: true
+    command: mvn spring-boot:run
+    ports:
+      - '8080:8080'
